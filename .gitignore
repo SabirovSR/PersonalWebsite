@@ -1,0 +1,37 @@
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+bin-tmp/
+*.tmp
+
+# Sensitive data
+*.env
+config.php
+
+# PHP
+vendor/
+composer.lock
+
+# Node (если будешь использовать в будущем)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build files
+dist/
+build/
