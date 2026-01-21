@@ -1,0 +1,192 @@
+# =============================================
+# Docker Compose - Sabirov.tech
+# =============================================
+# Production-ready configuration with shared infrastructure
+# Использование внешней инфраструктуры (Kafka KRaft + Redis Sentinel)
+# из сети messaging
+# =============================================
+
+services:
+  # =============================================
+  # ЛОКАЛЬНАЯ ИНФРАСТРУКТУРА
+  # =============================================
+
+  # PostgreSQL - база данных для хранения заявок
+  postgres:
+    image: postgres:16-alpine
+    container_name: sabirov-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-contacts}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sabirov-network
+    restart: unless-stopped
+
+  # =============================================
+  # ПРИЛОЖЕНИЕ
+  # =============================================
+  # Используется внешняя инфраструктура из сети messaging:
+  # - Kafka KRaft кластер (kafka-controller-1,2,3)
+  # - Redis Sentinel кластер (redis-master, redis-replica-1, sentinels)
+
+  # Backend API - FastAPI сервер
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: savik175/sabirov-backend:latest
+    container_name: sabirov-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Application
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DEBUG=${DEBUG:-false}
+      - PUBLIC_API_KEY=${PUBLIC_API_KEY}
+      
+      # Kafka (external KRaft cluster)
+      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS:-kafka-controller-1:9092,kafka-controller-2:9092,kafka-controller-3:9092}
+      - KAFKA_TOPIC=${KAFKA_TOPIC:-sabirov-contact-requests}
+      - KAFKA_DLQ_TOPIC=${KAFKA_DLQ_TOPIC:-sabirov-contact-dlq}
+      
+      # Database
+      - POSTGRES_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-contacts}
+      
+      # Redis Sentinel (external cluster)
+      - REDIS_SENTINEL_HOSTS=${REDIS_SENTINEL_HOSTS:-redis-sentinel-1:26379,redis-sentinel-2:26379,redis-sentinel-3:26379}
+      - REDIS_SENTINEL_MASTER=${REDIS_SENTINEL_MASTER:-mymaster}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_secure_password}
+      - REDIS_DB=${REDIS_DB:-0}
+      
+      # CORS
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://sabirov.tech,https://web.sabirov.tech,http://localhost:3000}
+      
+      # Telegram
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_OWNER_ID=${TELEGRAM_OWNER_ID:-0}
+      - TELEGRAM_WEBHOOK_SECRET=${TELEGRAM_WEBHOOK_SECRET}
+      - TELEGRAM_WEBHOOK_URL=${TELEGRAM_WEBHOOK_URL}
+      
+      # Rate Limiting
+      - RATE_LIMIT_REQUESTS=${RATE_LIMIT_REQUESTS:-5}
+      - RATE_LIMIT_WINDOW_SECONDS=${RATE_LIMIT_WINDOW_SECONDS:-3600}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    labels:
+      - "traefik.enable=true"
+      # Main API router (includes /api/public/contact, /api/telegram/webhook/{secret}, etc.)
+      - "traefik.http.routers.sabirov-api.rule=Host(`${API_DOMAIN:-api.sabirov.tech}`)"
+      - "traefik.http.routers.sabirov-api.entrypoints=websecure"
+      - "traefik.http.routers.sabirov-api.tls=true"
+      - "traefik.http.routers.sabirov-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.sabirov-api.loadbalancer.server.port=8000"
+      # Security middleware (if configured in Traefik)
+      # - "traefik.http.routers.sabirov-api.middlewares=security-headers@file"
+    networks:
+      - sabirov-network
+      - messaging
+      - edge
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/live').read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # Worker - обработчик сообщений из Kafka
+  worker:
+    image: savik175/sabirov-backend:latest
+    container_name: sabirov-worker
+    command: python -m app.worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    environment:
+      # Application
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DEBUG=${DEBUG:-false}
+      
+      # Kafka (external KRaft cluster)
+      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS:-kafka-controller-1:9092,kafka-controller-2:9092,kafka-controller-3:9092}
+      - KAFKA_TOPIC=${KAFKA_TOPIC:-sabirov-contact-requests}
+      - KAFKA_DLQ_TOPIC=${KAFKA_DLQ_TOPIC:-sabirov-contact-dlq}
+      - KAFKA_CONSUMER_GROUP=${KAFKA_CONSUMER_GROUP:-contact-processor}
+      
+      # Database
+      - POSTGRES_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-contacts}
+      
+      # Telegram
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_OWNER_ID=${TELEGRAM_OWNER_ID:-0}
+    networks:
+      - sabirov-network
+      - messaging
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+
+  # Frontend - Next.js сайт
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_KEY=${PUBLIC_API_KEY}
+    image: savik175/sabirov-frontend:latest
+    container_name: sabirov-frontend
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sabirov-site.rule=Host(`${SITE_DOMAIN:-web.sabirov.tech}`)"
+      - "traefik.http.routers.sabirov-site.entrypoints=websecure"
+      - "traefik.http.routers.sabirov-site.tls=true"
+      - "traefik.http.routers.sabirov-site.tls.certresolver=letsencrypt"
+      - "traefik.http.services.sabirov-site.loadbalancer.server.port=3000"
+      # Security middleware (if configured in Traefik)
+      # - "traefik.http.routers.sabirov-site.middlewares=security-headers@file"
+    networks:
+      - sabirov-network
+      - edge
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+# =============================================
+# СЕТИ
+# =============================================
+networks:
+  # Локальная сеть для взаимодействия сервисов
+  sabirov-network:
+    driver: bridge
+  # Внешняя сеть для Kafka KRaft и Redis Sentinel
+  messaging:
+    external: true
+  # Внешняя сеть Traefik (для публичного доступа)
+  edge:
+    external: true
+
+# =============================================
+# ТОМА ДЛЯ ПЕРСИСТЕНТНОСТИ ДАННЫХ
+# =============================================
+volumes:
+  postgres_data:
+    name: sabirov_postgres_data

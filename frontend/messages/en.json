@@ -1,0 +1,168 @@
+{
+  "nav": {
+    "about": "About",
+    "skills": "Skills",
+    "experience": "Experience",
+    "projects": "Projects",
+    "contact": "Contact"
+  },
+  "hero": {
+    "online": "Online",
+    "greeting": "Hi, I'm",
+    "name": "Saveliy Sabirov",
+    "subtitle": "// Software Developer & DevOps Enthusiast",
+    "description": "Developer at GNIVC — the general contractor of the Federal Tax Service of Russia. Creating reliable and scalable solutions for government information systems.",
+    "cta": "Get in touch",
+    "viewProjects": "View projects",
+    "skills": {
+      "csharp": "C# / .NET",
+      "python": "Python / FastAPI",
+      "docker": "Docker / DevOps"
+    }
+  },
+  "about": {
+    "section": "// 01. About Me",
+    "title": "Who am I?",
+    "description": "Hi! My name is Saveliy, and I'm passionate about creating quality software solutions. My journey in development started with an interest in automation and infrastructure.",
+    "text1": "I specialize in backend development using C# and .NET, as well as Python and FastAPI. I enjoy working with modern technologies and infrastructure solutions.",
+    "text2": "Currently working at GNIVC, where I develop and maintain government information systems. In my free time, I study new technologies and work on personal projects.",
+    "text3": "When I'm not coding, I:",
+    "hobbies": [
+      "Learn new frameworks and tools",
+      "Experiment with DevOps practices",
+      "Share knowledge with colleagues",
+      "Optimize development processes"
+    ],
+    "stats": [
+      { "number": "3+", "label": "Years of experience" },
+      { "number": "10+", "label": "Technologies" },
+      { "number": "∞", "label": "Desire to learn" },
+      { "number": "⌨️", "label": "Touch typing", "sublabel": "RU: 130 | EN: 80 wpm" }
+    ],
+    "terminal": {
+      "lines": [
+        { "prompt": true, "command": " whoami" },
+        { "output": "Sabirov Saveliy Ruslanovich" },
+        { "prompt": true, "command": " cat skills.txt" },
+        { "output": "C#, .NET, Python, FastAPI" },
+        { "output": "Docker, React, PostgreSQL" },
+        { "output": "Grafana, Prometheus, Redis" },
+        { "prompt": true, "command": " echo $CURRENT_JOB" },
+        { "output": "Developer @ GNIVC" },
+        { "prompt": true, "command": " cat learning.txt" },
+        { "output": "Kubernetes, Kafka" },
+        { "prompt": true, "command": " _", "cursor": true }
+      ]
+    }
+  },
+  "skills": {
+    "section": "// 02. Skills",
+    "title": "My Tech Stack",
+    "description": "Tools and technologies I use to create reliable solutions",
+    "categories": {
+      "development": "Software Development",
+      "databases": "Databases",
+      "frontend": "Frontend",
+      "devops": "DevOps & Infrastructure",
+      "monitoring": "Monitoring",
+      "messaging": "Message Brokers"
+    },
+    "learning": "* — currently learning"
+  },
+  "experience": {
+    "section": "// 03. Work Experience",
+    "title": "Where I've Worked",
+    "description": "My professional journey in IT",
+    "present": "present",
+    "jobs": [
+      {
+        "date": "2023 — present",
+        "title": "Developer",
+        "company": "GNIVC (General contractor of FTS of Russia)",
+        "description": "Development and maintenance of government information systems for the Federal Tax Service. Architecture design, server logic development, integration with external systems and databases.",
+        "tech": ["C#", ".NET", "LJE", "DM&EA", "BLOB", "RTM", "Oracle", "PostgreSQL"]
+      },
+      {
+        "date": "Personal projects",
+        "title": "Full-Stack Development",
+        "company": "Pet-projects and experiments",
+        "description": "Creating own projects to learn new technologies: REST API with FastAPI, web applications with React, CI/CD pipeline setup and monitoring systems.",
+        "tech": ["Python", "FastAPI", "React", "Redis", "Kafka", "Grafana", "Celery"]
+      }
+    ]
+  },
+  "projects": {
+    "section": "// 04. Projects",
+    "title": "What I've Built",
+    "description": "Some projects I've created or participated in",
+    "viewCode": "Code",
+    "viewDemo": "Demo",
+    "tags": "Technologies",
+    "items": [
+      {
+        "icon": "🤖",
+        "title": "Automated Service Platform",
+        "description": "Full-featured Telegram-based system with advanced admin panel, callback architecture, ticket and user management. Integrated middleware layers (rate limiting, blocks, maintenance window), real-time notifications via Celery, Redis caching, Prometheus + Grafana monitoring, automatic weekly Excel reports and alert system.",
+        "tech": ["Python", "Telegram Bot API", "Redis", "Celery", "Prometheus", "Grafana"]
+      },
+      {
+        "icon": "🚀",
+        "title": "FastAPI Backend",
+        "description": "High-performance REST API in Python with asynchronous request processing, Celery task queues and Redis caching.",
+        "tech": ["Python", "FastAPI", "Redis", "Celery"]
+      },
+      {
+        "icon": "⚡",
+        "title": "This Website",
+        "description": "Full-featured portfolio website with modern glassmorphism design, interactive 3D tilt effects, floating particles animation, i18n localization. Backend on FastAPI with Kafka queues, Redis caching, PostgreSQL, Telegram bot for notifications. Complete CI/CD coverage with GitHub Actions, E2E tests (Playwright), unit tests (Jest, pytest), linting and security scanning.",
+        "tech": ["Next.js", "TypeScript", "Tailwind CSS", "FastAPI", "Kafka", "Redis", "PostgreSQL", "Docker", "Playwright", "Jest"]
+      }
+    ]
+  },
+  "contact": {
+    "section": "// 05. Contact",
+    "title": "Let's Connect!",
+    "description": "Open to interesting offers and new projects",
+    "subtitle": "Get in Touch",
+    "text": "If you have an interesting project, collaboration proposal, or just want to chat — I'd be happy to hear from you!",
+    "form": {
+      "name": "// Your name *",
+      "namePlaceholder": "What's your name?",
+      "message": "// Message *",
+      "messagePlaceholder": "Tell me about your project or idea...",
+      "channels": "// How to reach you? *",
+      "submit": "Send message →",
+      "sending": "Sending...",
+      "success": "✓ Message sent! I'll get back to you soon.",
+      "error": "✗ Failed to send. Please try again later or email me at contact@sabirov.tech",
+      "validation": {
+        "fillRequired": "Please fill in all required fields",
+        "fillContact": "Please provide contact info for:"
+      }
+    },
+    "channels": {
+      "email": "Email",
+      "telegram": "Telegram",
+      "vk": "VK",
+      "phone": "Phone",
+      "website": "Website",
+      "max": "MAX",
+      "placeholders": {
+        "telegram": "@username",
+        "vk": "VK ID or profile link",
+        "max": "MAX ID or link",
+        "email": "your@email.com",
+        "phone": "+7 999 123-45-67",
+        "website": "https://example.com"
+      }
+    },
+    "links": {
+      "email": "contact@sabirov.tech",
+      "telegram": "Telegram",
+      "github": "GitHub"
+    }
+  },
+  "footer": {
+    "copyright": "© 2026 Saveliy Sabirov. Built with 💚 and a bit of ☕"
+  }
+}
