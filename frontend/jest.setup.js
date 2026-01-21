@@ -35,6 +35,22 @@ jest.mock('next-intl', () => {
         sending: 'Отправка...',
         success: '✓ Сообщение отправлено! Я свяжусь с вами в ближайшее время.',
         error: '✗ Не удалось отправить. Попробуйте позже или напишите на contact@sabirov.tech',
+      },
+      channels: {
+        email: 'Email',
+        telegram: 'Telegram',
+        vk: 'VK',
+        phone: 'Телефон',
+        website: 'Сайт',
+        max: 'MAX',
+        placeholders: {
+          telegram: '@username',
+          vk: 'VK ID или ссылка на профиль',
+          max: 'MAX ID или ссылка',
+          email: 'your@email.com',
+          phone: '+7 999 123-45-67',
+          website: 'https://example.com'
+        }
       }
     }
   };
