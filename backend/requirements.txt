@@ -12,7 +12,7 @@ sqlalchemy[asyncio]==2.0.25
 alembic==1.13.1
 
 # Redis
-redis==5.0.1
+redis==7.1.0
 
 # Telegram
 aiogram>=3.16.0
