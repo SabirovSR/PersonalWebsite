@@ -73,7 +73,8 @@ describe('Hero Component', () => {
     
     // Initially should be empty or partial
     const subtitle = screen.getByText((content, element) => {
-      return element?.className?.includes('font-mono') || false;
+      const className = element?.className;
+      return (typeof className === 'string' && className.includes('font-mono')) || false;
     });
     
     // Fast-forward all timers

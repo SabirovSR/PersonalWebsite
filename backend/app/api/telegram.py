@@ -34,6 +34,11 @@ async def telegram_webhook(secret: str, update: dict):
     try:
         # Parse and process the update
         telegram_update = types.Update(**update)
+        if bot is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Bot not initialized",
+            )
         await dp.feed_update(bot, telegram_update)
         return {"ok": True}
     except Exception as e:

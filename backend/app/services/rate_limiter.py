@@ -84,7 +84,8 @@ class RateLimiter:
                 )
 
                 # Test connection
-                await self._redis.ping()
+                if self._redis is not None:
+                    await self._redis.ping()
 
                 # Get master info
                 master_address = await self._sentinel.discover_master(
@@ -107,7 +108,7 @@ class RateLimiter:
         """Disconnect from Redis."""
         try:
             if self._redis is not None:
-                await self._redis.aclose()
+                await self._redis.close()
                 self._redis = None
                 logger.info("Redis connection closed")
 
@@ -192,14 +193,14 @@ class RateLimiter:
         try:
             current = await self._redis.get(key)
             if current is None:
-                return self._settings.rate_limit_requests
+                return int(self._settings.rate_limit_requests)
 
             remaining = max(0, self._settings.rate_limit_requests - int(current))
-            return remaining
+            return int(remaining)
 
         except Exception as e:
             logger.exception(f"Error getting remaining requests: {e}")
-            return self._settings.rate_limit_requests
+            return int(self._settings.rate_limit_requests)
 
     async def get_ttl(self, identifier: str) -> int:
         """
@@ -218,7 +219,7 @@ class RateLimiter:
 
         try:
             ttl = await self._redis.ttl(key)
-            return max(0, ttl) if ttl > 0 else 0
+            return int(max(0, ttl)) if ttl > 0 else 0
         except Exception as e:
             logger.exception(f"Error getting TTL: {e}")
             return 0

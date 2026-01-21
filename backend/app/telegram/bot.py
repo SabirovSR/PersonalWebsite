@@ -3,6 +3,7 @@ Telegram bot for receiving contact notifications.
 """
 
 import logging
+from typing import Any
 
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
@@ -22,11 +23,13 @@ dp = Dispatcher()
 
 # Middleware to restrict access to owner only
 @dp.message.middleware()
-async def auth_middleware(handler, event: Message, data: dict):
+async def auth_middleware(handler, event: Message, data: dict) -> Any:
     """Only allow messages from the owner."""
-    if event.from_user and event.from_user.id != settings.telegram_owner_id:
+    if event.from_user is None:
+        return None
+    if event.from_user.id != settings.telegram_owner_id:
         logger.warning(f"Unauthorized access attempt from user {event.from_user.id}")
-        return  # Ignore messages from unauthorized users
+        return None  # Ignore messages from unauthorized users
     return await handler(event, data)
 
 
@@ -44,10 +47,11 @@ async def cmd_start(message: Message):
 @dp.message(Command("status"))
 async def cmd_status(message: Message):
     """Handle /status command."""
+    user_id = message.from_user.id if message.from_user else "Unknown"
     await message.answer(
         "✅ Бот работает нормально!\n\n"
         f"🔔 Уведомления: Включены\n"
-        f"👤 Твой ID: {message.from_user.id}"
+        f"👤 Твой ID: {user_id}"
     )
 
 
