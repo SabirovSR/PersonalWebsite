@@ -23,5 +23,5 @@ pydantic-settings==2.1.0
 email-validator>=2.0.0
 
 # Utils
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
 httpx==0.26.0
