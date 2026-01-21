@@ -20,18 +20,48 @@ bin-tmp/
 *.tmp
 
 # Sensitive data
-*.env
+.env
+.env.local
+.env.*.local
+!.env.example
 config.php
 
 # PHP
 vendor/
 composer.lock
 
-# Node (если будешь использовать в будущем)
+# Node
 node_modules/
-package-lock.json
 yarn.lock
+pnpm-lock.yaml
+
+# Next.js
+.next/
+out/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+.venv/
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
 
 # Build files
 dist/
 build/
+
+# Docker
+.docker/
+
+# Testing
+coverage/
+.coverage
+htmlcov/
+
+# Environment variables with secrets
+.env

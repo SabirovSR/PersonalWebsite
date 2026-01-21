@@ -1,0 +1,27 @@
+# FastAPI and server
+fastapi==0.109.2
+uvicorn[standard]==0.27.1
+python-multipart==0.0.9
+
+# Kafka
+aiokafka==0.10.0
+
+# Database
+asyncpg==0.29.0
+sqlalchemy[asyncio]==2.0.25
+alembic==1.13.1
+
+# Redis
+redis==5.0.1
+
+# Telegram
+aiogram>=3.16.0
+
+# Validation and settings
+pydantic==2.6.1
+pydantic-settings==2.1.0
+email-validator>=2.0.0
+
+# Utils
+python-dateutil==2.9.0.post0
+httpx==0.26.0

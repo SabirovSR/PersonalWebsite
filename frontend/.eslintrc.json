@@ -1,0 +1,30 @@
+{
+    "extends": [
+      "next/core-web-vitals",
+      "plugin:testing-library/react",
+      "plugin:jest-dom/recommended"
+    ],
+    "plugins": ["testing-library", "jest-dom"],
+    "overrides": [
+      {
+        "files": ["**/__tests__/**/*", "**/*.test.*", "**/*.spec.*", "**/e2e/**/*"],
+        "env": {
+          "jest": true,
+          "node": true
+        },
+        "rules": {
+          "testing-library/prefer-screen-queries": "error",
+          "testing-library/await-async-queries": "error",
+          "testing-library/no-await-sync-queries": "error",
+          "jest-dom/prefer-checked": "error",
+          "jest-dom/prefer-enabled-disabled": "error",
+          "jest-dom/prefer-required": "error",
+          "jest-dom/prefer-to-have-attribute": "error"
+        }
+      }
+    ],
+    "rules": {
+      "@next/next/no-html-link-for-pages": "off"
+    }
+  }
+  
