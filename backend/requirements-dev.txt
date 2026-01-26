@@ -10,7 +10,7 @@ pytest-postgresql==5.0.0
 fakeredis[lua]==2.21.0
 
 # Mocking
-respx==0.20.2
+respx==0.22.0
 
 # Code quality
 ruff==0.1.15
