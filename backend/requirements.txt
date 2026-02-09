@@ -4,7 +4,7 @@ uvicorn[standard]==0.27.1
 python-multipart==0.0.9
 
 # Kafka
-aiokafka==0.10.0
+aiokafka==0.13.0
 
 # Database
 asyncpg==0.29.0
