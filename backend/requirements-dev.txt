@@ -16,7 +16,7 @@ respx==0.20.2
 ruff==0.1.15
 black==24.1.1
 mypy==1.8.0
-bandit==1.7.6
+bandit==1.9.3
 safety==3.0.1
 
 # Type stubs
