@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Navigation } from '@/components/Navigation';
 import { Hero } from '@/components/Hero';
@@ -21,6 +22,10 @@ const Projects = dynamic(() => import('@/components/Projects').then(mod => ({ de
   ssr: true,
 });
 
+const Blog = dynamic(() => import('@/components/Blog').then(mod => ({ default: mod.Blog })), {
+  ssr: false,
+});
+
 const Contact = dynamic(() => import('@/components/Contact').then(mod => ({ default: mod.Contact })), {
   ssr: true,
 });
@@ -30,6 +35,8 @@ const Footer = dynamic(() => import('@/components/Footer').then(mod => ({ defaul
 });
 
 export default function Home() {
+  const [hasBlog, setHasBlog] = useState(false);
+
   return (
     <main>
       <Navigation />
@@ -38,7 +45,8 @@ export default function Home() {
       <Skills />
       <Experience />
       <Projects />
-      <Contact />
+      <Blog onHasPosts={setHasBlog} />
+      <Contact hasBlog={hasBlog} />
       <Footer />
     </main>
   );

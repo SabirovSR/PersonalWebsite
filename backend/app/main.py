@@ -12,6 +12,7 @@ from app.api import api_router
 from app.config import get_settings
 from app.services.kafka_producer import kafka_producer
 from app.services.rate_limiter import rate_limiter
+from app.services.status_service import status_service
 from app.telegram.bot import setup_webhook, shutdown_webhook
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ async def lifespan(app: FastAPI):
 
     # Connect services
     await rate_limiter.connect()
+    await status_service.connect()
     await kafka_producer.start()
 
     # Setup Telegram webhook if configured
@@ -43,6 +45,7 @@ async def lifespan(app: FastAPI):
     await shutdown_webhook()
     await kafka_producer.stop()
     await rate_limiter.disconnect()
+    await status_service.disconnect()
 
     logger.info("Application shut down successfully")
 

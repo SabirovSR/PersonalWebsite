@@ -10,7 +10,14 @@ export function Footer() {
       <div className="max-w-[1200px] mx-auto px-6">
         <div className="flex flex-col md:flex-row justify-between items-center gap-5">
           <div className="font-mono text-sm text-[var(--text-muted)]">
-            {t('copyright')}
+            {t('copyrightStart')}{' '}
+            <span
+              className="transition-colors duration-500"
+              style={{ color: 'var(--accent-primary)' }}
+            >
+              ♥
+            </span>
+            {' '}{t('copyrightEnd')}
           </div>
 
           <div className="flex gap-6">

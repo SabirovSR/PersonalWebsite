@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { ParallaxBackground } from '@/components/ParallaxBackground';
 import { FloatingParticles } from '@/components/FloatingParticles';
 import { Terminal } from '@/components/Terminal';
+import { LangSetter } from '@/components/LangSetter';
 
 // Force dynamic rendering for i18n routes
 export const dynamic = 'force-dynamic';
@@ -66,23 +67,22 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body>
-        <NextIntlClientProvider messages={messages}>
-          <ThemeProvider>
-            <ParallaxBackground />
-            <FloatingParticles />
-            <Terminal />
-            <div className="bg-grid" />
-            <div className="bg-gradient-overlay" />
-            <script
-              type="application/ld+json"
-              dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-            />
-            {children}
-          </ThemeProvider>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <>
+      <LangSetter lang={locale} />
+      <NextIntlClientProvider messages={messages}>
+        <ThemeProvider>
+          <ParallaxBackground />
+          <FloatingParticles />
+          <Terminal />
+          <div className="bg-grid" />
+          <div className="bg-gradient-overlay" />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          />
+          {children}
+        </ThemeProvider>
+      </NextIntlClientProvider>
+    </>
   );
 }

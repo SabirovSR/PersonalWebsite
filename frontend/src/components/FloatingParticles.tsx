@@ -12,32 +12,48 @@ interface Particle {
   opacity: number;
 }
 
-const MAX_VELOCITY = 0.3; // Maximum particle velocity
-const DAMPING = 0.98; // Velocity damping factor (0.98 = 2% reduction per frame)
+const MAX_VELOCITY = 0.3;
+const DAMPING = 0.98;
+
+/** Parse a CSS hex color (#rrggbb or #rgb) into an [r, g, b] tuple. */
+function hexToRgb(hex: string): [number, number, number] {
+  const clean = hex.trim().replace('#', '');
+  if (clean.length === 3) {
+    return [
+      parseInt(clean[0] + clean[0], 16),
+      parseInt(clean[1] + clean[1], 16),
+      parseInt(clean[2] + clean[2], 16),
+    ];
+  }
+  return [
+    parseInt(clean.slice(0, 2), 16),
+    parseInt(clean.slice(2, 4), 16),
+    parseInt(clean.slice(4, 6), 16),
+  ];
+}
 
 export function FloatingParticles() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number>();
   const particlesRef = useRef<Particle[]>([]);
   const mouseRef = useRef({ x: 0, y: 0 });
-  const [isDesktop] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth > 768;
-  });
+  // Start as false — matches SSR output, updated after mount to avoid hydration mismatch.
+  const [isDesktop, setIsDesktop] = useState(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   useEffect(() => {
-    // Don't render on mobile - check inside useEffect
-    if (isMobile || !isDesktop) {
-      return;
-    }
+    setIsDesktop(window.innerWidth > 768);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile || !isDesktop) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas size
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -45,7 +61,6 @@ export function FloatingParticles() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Create particles
     const particleCount = Math.floor((window.innerWidth * window.innerHeight) / 12000);
     const particles: Particle[] = [];
 
@@ -61,40 +76,37 @@ export function FloatingParticles() {
     }
     particlesRef.current = particles;
 
-    // Mouse tracking
     const handleMouseMove = (e: MouseEvent) => {
-      mouseRef.current = {
-        x: e.clientX,
-        y: e.clientY,
-      };
+      mouseRef.current = { x: e.clientX, y: e.clientY };
     };
     window.addEventListener('mousemove', handleMouseMove);
 
-    // Animation loop
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Read the current accent color once per frame so it tracks status changes.
+      const accentHex =
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--accent-primary')
+          .trim() || '#6b7280';
+      const [r, g, b] = hexToRgb(accentHex);
 
       const mouse = mouseRef.current;
       const particles = particlesRef.current;
 
       particles.forEach((particle, i) => {
-        // Apply damping to gradually reduce velocity
         particle.vx *= DAMPING;
         particle.vy *= DAMPING;
 
-        // Update position
         particle.x += particle.vx;
         particle.y += particle.vy;
 
-        // Bounce off edges
         if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
         if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
 
-        // Keep particles in bounds
         particle.x = Math.max(0, Math.min(canvas.width, particle.x));
         particle.y = Math.max(0, Math.min(canvas.height, particle.y));
 
-        // Mouse interaction - repel particles
         const dx = mouse.x - particle.x;
         const dy = mouse.y - particle.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
@@ -107,30 +119,27 @@ export function FloatingParticles() {
           particle.vy -= Math.sin(angle) * force * 0.05;
         }
 
-        // Cap velocity to prevent infinite acceleration
         const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
         if (speed > MAX_VELOCITY) {
           particle.vx = (particle.vx / speed) * MAX_VELOCITY;
           particle.vy = (particle.vy / speed) * MAX_VELOCITY;
         }
 
-        // Draw particle
         ctx.beginPath();
         ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 255, 136, ${particle.opacity})`;
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${particle.opacity})`;
         ctx.fill();
 
-        // Draw connections
         particles.slice(i + 1).forEach(otherParticle => {
           const dx = otherParticle.x - particle.x;
           const dy = otherParticle.y - particle.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
+          const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (distance < 180) {
+          if (dist < 180) {
             ctx.beginPath();
             ctx.moveTo(particle.x, particle.y);
             ctx.lineTo(otherParticle.x, otherParticle.y);
-            ctx.strokeStyle = `rgba(0, 255, 136, ${(1 - distance / 180) * 0.2})`;
+            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${(1 - dist / 180) * 0.2})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
@@ -151,10 +160,7 @@ export function FloatingParticles() {
     };
   }, [isMobile, isDesktop]);
 
-  // Don't render on mobile
-  if (isMobile || !isDesktop) {
-    return null;
-  }
+  if (isMobile || !isDesktop) return null;
 
   return (
     <canvas

@@ -59,7 +59,7 @@ services:
       - KAFKA_DLQ_TOPIC=${KAFKA_DLQ_TOPIC:-sabirov-contact-dlq}
       
       # Database
-      - POSTGRES_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-contacts}
+      - POSTGRES_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-contacts}
       
       # Redis Sentinel (external cluster)
       - REDIS_SENTINEL_HOSTS=${REDIS_SENTINEL_HOSTS:-redis-sentinel-1:26379,redis-sentinel-2:26379,redis-sentinel-3:26379}
@@ -79,8 +79,6 @@ services:
       # Rate Limiting
       - RATE_LIMIT_REQUESTS=${RATE_LIMIT_REQUESTS:-5}
       - RATE_LIMIT_WINDOW_SECONDS=${RATE_LIMIT_WINDOW_SECONDS:-3600}
-    ports:
-      - "${BACKEND_PORT:-8000}:8000"
     labels:
       - "traefik.enable=true"
       # Main API router (includes /api/public/contact, /api/telegram/webhook/{secret}, etc.)
@@ -89,6 +87,13 @@ services:
       - "traefik.http.routers.sabirov-api.tls=true"
       - "traefik.http.routers.sabirov-api.tls.certresolver=letsencrypt"
       - "traefik.http.services.sabirov-api.loadbalancer.server.port=8000"
+      # WebSocket router: routes /api/ws/* from the frontend domain directly to backend,
+      # bypassing the Next.js server (which cannot proxy WebSocket upgrades).
+      - "traefik.http.routers.sabirov-api-ws.rule=Host(`${SITE_DOMAIN:-web.sabirov.tech}`) && PathPrefix(`/api/ws/`)"
+      - "traefik.http.routers.sabirov-api-ws.entrypoints=websecure"
+      - "traefik.http.routers.sabirov-api-ws.tls=true"
+      - "traefik.http.routers.sabirov-api-ws.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.sabirov-api-ws.service=sabirov-api"
       # Security middleware (if configured in Traefik)
       # - "traefik.http.routers.sabirov-api.middlewares=security-headers@file"
     networks:
@@ -125,7 +130,7 @@ services:
       - KAFKA_CONSUMER_GROUP=${KAFKA_CONSUMER_GROUP:-contact-processor}
       
       # Database
-      - POSTGRES_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-contacts}
+      - POSTGRES_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-contacts}
       
       # Telegram
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
@@ -144,12 +149,11 @@ services:
       dockerfile: Dockerfile
       args:
         - NEXT_PUBLIC_API_KEY=${PUBLIC_API_KEY}
+        - NEXT_PUBLIC_API_URL=https://${API_DOMAIN:-api.sabirov.tech}
     image: savik175/sabirov-frontend:latest
     container_name: sabirov-frontend
     environment:
       - NODE_ENV=${NODE_ENV:-production}
-    ports:
-      - "${FRONTEND_PORT:-3000}:3000"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.sabirov-site.rule=Host(`${SITE_DOMAIN:-web.sabirov.tech}`)"
@@ -157,8 +161,6 @@ services:
       - "traefik.http.routers.sabirov-site.tls=true"
       - "traefik.http.routers.sabirov-site.tls.certresolver=letsencrypt"
       - "traefik.http.services.sabirov-site.loadbalancer.server.port=3000"
-      # Security middleware (if configured in Traefik)
-      # - "traefik.http.routers.sabirov-site.middlewares=security-headers@file"
     networks:
       - sabirov-network
       - edge

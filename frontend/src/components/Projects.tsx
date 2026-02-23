@@ -44,7 +44,7 @@ export function Projects() {
             <TiltCard
               key={project.title}
               className={clsx(
-                'card overflow-hidden hover:shadow-[0_20px_40px_rgba(0,255,136,0.1)] transition-all duration-600',
+                'card overflow-hidden card-shadow-lg transition-all duration-600',
                 inView ? 'translate-y-0' : 'translate-y-8'
               )}
             >

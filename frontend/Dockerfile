@@ -10,10 +10,12 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# API ключ передаётся как аргумент сборки
-# NEXT_PUBLIC_* переменные должны быть доступны во время сборки
+# NEXT_PUBLIC_* переменные встраиваются в бандл во время сборки
 ARG NEXT_PUBLIC_API_KEY=dev-api-key
 ENV NEXT_PUBLIC_API_KEY=$NEXT_PUBLIC_API_KEY
+
+ARG NEXT_PUBLIC_API_URL=https://api.sabirov.tech
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 # Устанавливаем зависимости
 # npm ci гарантирует воспроизводимость сборки из package-lock.json

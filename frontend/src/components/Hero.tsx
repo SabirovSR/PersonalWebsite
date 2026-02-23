@@ -3,14 +3,29 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+
+interface OwnerStatus {
+  code: string;
+  emoji: string;
+  label_ru: string;
+  label_en: string;
+  color: string;
+  updated_at: string | null;
+}
+
+function applyStatusTheme(status: OwnerStatus) {
+  document.documentElement.setAttribute('data-status', status.code);
+}
 
 export function Hero() {
   const t = useTranslations('hero');
+  const locale = useLocale();
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const [typedText, setTypedText] = useState('');
   const fullText = t('subtitle');
+  const [ownerStatus, setOwnerStatus] = useState<OwnerStatus | null>(null);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -35,16 +50,85 @@ export function Hero() {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    let ws: WebSocket | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout>;
+    let unmounted = false;
+
+    const applyStatus = (data: OwnerStatus) => {
+      setOwnerStatus(data);
+      applyStatusTheme(data);
+    };
+
+    // HTTP fetch fires immediately for instant display (works even if WS isn't deployed)
+    fetch('/api/public/status')
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: OwnerStatus | null) => { if (d && !unmounted) applyStatus(d); })
+      .catch(() => {});
+
+    // WebSocket via same-origin URL so it proxies through the Next.js rewrite
+    // (/api/ws/status → backend:8000/api/ws/status). This avoids any
+    // cross-domain TLS / browser-security issues.
+    const connectWs = () => {
+      if (unmounted) return;
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/api/ws/status`;
+
+      ws = new WebSocket(wsUrl);
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data) as OwnerStatus & { ping?: boolean };
+          if (data.ping) return;
+          applyStatus(data);
+        } catch { /* ignore malformed frames */ }
+      };
+
+      ws.onclose = () => {
+        if (!unmounted) reconnectTimer = setTimeout(connectWs, 3000);
+      };
+
+      ws.onerror = () => { ws?.close(); };
+    };
+
+    connectWs();
+
+    return () => {
+      unmounted = true;
+      clearTimeout(reconnectTimer);
+      ws?.close();
+    };
+  }, []);
+
+  const statusLabel = ownerStatus
+    ? (locale === 'ru' ? ownerStatus.label_ru : ownerStatus.label_en)
+    : '';
+
   return (
     <section ref={sectionRef} className="min-h-screen flex items-center relative z-[1] pt-20" id="hero">
       <div className="max-w-[1200px] mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Text Content */}
           <div className="animate-[fadeInUp_0.8s_ease-out] order-2 lg:order-1 text-center lg:text-left">
-            <span className="inline-flex items-center gap-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] px-4 py-2 rounded-full font-mono text-sm text-[var(--accent-primary)] mb-6">
-              <span className="w-2 h-2 bg-[var(--accent-primary)] rounded-full animate-pulse" />
-              {t('online')}
-            </span>
+            {/* Status badge — hidden until status arrives, then fades in */}
+            <div className={`mb-6 transition-all duration-500 ${ownerStatus ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1 pointer-events-none'}`}
+                 style={{ minHeight: '2.25rem' }}>
+              <span className="inline-flex items-center gap-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] px-4 py-2 rounded-full font-mono text-sm text-[var(--accent-primary)]">
+                {/* Dot: only for online status */}
+                {ownerStatus?.code === 'online' && (
+                  <span className="w-2 h-2 rounded-full animate-pulse bg-[var(--accent-primary)]" />
+                )}
+
+                {/* Emoji: for all non-online statuses; gaming pulses */}
+                {ownerStatus && ownerStatus.code !== 'online' && (
+                  <span className={ownerStatus.code === 'gaming' ? 'animate-pulse' : ''}>
+                    {ownerStatus.emoji}
+                  </span>
+                )}
+
+                {statusLabel}
+              </span>
+            </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4">
               {t('greeting')}

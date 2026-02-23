@@ -40,7 +40,7 @@ export function About() {
             'transition-all duration-600 delay-200',
             inView ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
           )}>
-            <h3 className="text-2xl font-bold text-[var(--accent-primary)] mb-5">
+            <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-5 pl-4 border-l-[3px] border-[var(--accent-primary)]">
               {t('text1')}
             </h3>
             

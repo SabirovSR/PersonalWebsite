@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { JetBrains_Mono, Outfit } from 'next/font/google';
+import { JetBrains_Mono, Onest } from 'next/font/google';
 import './globals.css';
 
 const jetbrainsMono = JetBrains_Mono({
@@ -7,8 +7,8 @@ const jetbrainsMono = JetBrains_Mono({
   variable: '--font-mono',
 });
 
-const outfit = Outfit({
-  subsets: ['latin'],
+const onest = Onest({
+  subsets: ['latin', 'cyrillic'],
   variable: '--font-sans',
 });
 
@@ -103,8 +103,10 @@ export default function RootLayout({
     <html suppressHydrationWarning>
       <head>
         <link rel="preload" href="/avatar.jpg" as="image" />
+        {/* Set neutral loading state synchronously before hydration to prevent accent-color flash */}
+        <script dangerouslySetInnerHTML={{ __html: `document.documentElement.setAttribute('data-status','loading')` }} />
       </head>
-      <body className={`${jetbrainsMono.variable} ${outfit.variable} font-sans`}>
+      <body className={`${jetbrainsMono.variable} ${onest.variable} font-sans`}>
         {children}
       </body>
     </html>

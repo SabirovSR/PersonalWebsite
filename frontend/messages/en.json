@@ -120,11 +120,15 @@
     ]
   },
   "contact": {
-    "section": "// 05. Contact",
-    "title": "Let's Connect!",
-    "description": "Open to interesting offers and new projects",
-    "subtitle": "Get in Touch",
-    "text": "If you have an interesting project, collaboration proposal, or just want to chat — I'd be happy to hear from you!",
+    "section": "// 06. Contact",
+    "sectionAlt": "// 05. Contact",
+    "title": "Say Hello",
+    "description": "Got a question, an idea, or just want to talk — drop me a line",
+    "busyTitle": "Currently Unavailable",
+    "busyDescription": "Not available right now — leave a message and I'll reply when I'm back",
+    "subtitle": "Contact",
+    "text": "I read my messages, enjoy discussing interesting problems, and always up for a good tech conversation.",
+    "busyText": "I'm currently busy and won't be able to respond quickly. But your message will reach me — I'll get back to it.",
     "form": {
       "name": "// Your name *",
       "namePlaceholder": "What's your name?",
@@ -162,7 +166,13 @@
       "github": "GitHub"
     }
   },
+  "blog": {
+    "section": "// 05. Notes",
+    "title": "Notes & Thoughts",
+    "description": "Short takes on interesting tech, tools, and ideas"
+  },
   "footer": {
-    "copyright": "© 2026 Saveliy Sabirov. Built with 💚 and a bit of ☕"
+    "copyrightStart": "© 2026 Saveliy Sabirov. Built with",
+    "copyrightEnd": "and a bit of ☕"
   }
 }

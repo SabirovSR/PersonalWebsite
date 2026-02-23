@@ -75,8 +75,10 @@ export function Terminal() {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = '#00ff88';
-      ctx.font = `${fontSize}px monospace`;
+    const accentColor = getComputedStyle(document.documentElement)
+      .getPropertyValue('--accent-primary').trim() || '#00ff88';
+    ctx.fillStyle = accentColor;
+    ctx.font = `${fontSize}px monospace`;
 
       for (let i = 0; i < drops.length; i++) {
         const text = chars[Math.floor(Math.random() * chars.length)];
@@ -399,7 +401,7 @@ Feel free to reach out! Scroll down to the contact form.`
                       ? 'text-[var(--accent-primary)]'
                       : line.type === 'error'
                       ? 'text-red-400'
-                      : 'text-green-400'
+                      : 'text-[var(--accent-secondary)]'
                   }`}
                 >
                   {line.content}
@@ -416,7 +418,7 @@ Feel free to reach out! Scroll down to the contact form.`
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   disabled={isTyping}
-                  className="flex-1 bg-transparent border-none outline-none text-green-400 font-mono"
+                  className="flex-1 bg-transparent border-none outline-none text-[var(--accent-primary)] font-mono"
                   autoComplete="off"
                   spellCheck="false"
                 />
