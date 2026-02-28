@@ -6,16 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
 import clsx from 'clsx';
 import { TiltCard } from './TiltCard';
-
-interface BlogPost {
-  id: string;
-  title: string;
-  content: string;
-  slug: string;
-  published: boolean;
-  created_at: string;
-  updated_at: string;
-}
+import type { BlogPost } from '@/lib/api.server';
 
 // ---------------------------------------------------------------------------
 // Minimal markdown renderer (no external deps)
@@ -175,12 +166,18 @@ function BlogCard({
 // Main Blog section
 // ---------------------------------------------------------------------------
 
-export function Blog({ onHasPosts }: { onHasPosts?: (has: boolean) => void }) {
+export function Blog({
+  onHasPosts,
+  initialPosts = [],
+}: {
+  onHasPosts?: (has: boolean) => void;
+  initialPosts?: BlogPost[];
+}) {
   const t = useTranslations('blog');
   const sectionRef = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState<BlogPost[]>(initialPosts);
+  const [loading, setLoading] = useState(initialPosts.length === 0);
   const [selected, setSelected] = useState<BlogPost | null>(null);
 
   useEffect(() => {
@@ -192,8 +189,13 @@ export function Blog({ onHasPosts }: { onHasPosts?: (has: boolean) => void }) {
     return () => observer.disconnect();
   }, []);
 
-  // Initial HTTP fetch as a fallback; the WebSocket snapshot will override it.
+  // HTTP fetch only when there are no server-provided initial posts.
+  // The WebSocket snapshot will override this once connected.
   useEffect(() => {
+    if (initialPosts.length > 0) {
+      onHasPosts?.(true);
+      return;
+    }
     fetch('/api/public/blog')
       .then((res) => res.ok ? res.json() : [])
       .then((data: BlogPost[]) => {
@@ -205,7 +207,8 @@ export function Blog({ onHasPosts }: { onHasPosts?: (has: boolean) => void }) {
         onHasPosts?.(false);
       })
       .finally(() => setLoading(false));
-  }, [onHasPosts]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Real-time updates via WebSocket (same-origin Traefik routing).
   useEffect(() => {
