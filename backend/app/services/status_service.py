@@ -58,8 +58,18 @@ class StatusService:
             await r.ping()
             return r
         except Exception:
+            sentinel_pass = (
+                settings.redis_sentinel_password or settings.redis_password
+            )
+            sentinel_kwargs = {
+                "socket_timeout": None,
+                "socket_connect_timeout": settings.redis_socket_connect_timeout,
+            }
+            if sentinel_pass:
+                sentinel_kwargs["password"] = sentinel_pass
             sentinel = Sentinel(
                 settings.redis_sentinel_hosts_list,
+                sentinel_kwargs=sentinel_kwargs,
                 socket_timeout=None,  # no timeout — pub/sub waits indefinitely
                 socket_connect_timeout=settings.redis_socket_connect_timeout,
             )
@@ -95,8 +105,19 @@ class StatusService:
         except Exception as direct_error:
             logger.warning(f"StatusService: Direct Redis failed, trying Sentinel: {direct_error}")
             try:
+                sentinel_pass = (
+                    self._settings.redis_sentinel_password
+                    or self._settings.redis_password
+                )
+                sentinel_kwargs = {
+                    "socket_timeout": self._settings.redis_socket_timeout,
+                    "socket_connect_timeout": self._settings.redis_socket_connect_timeout,
+                }
+                if sentinel_pass:
+                    sentinel_kwargs["password"] = sentinel_pass
                 sentinel = Sentinel(
                     self._settings.redis_sentinel_hosts_list,
+                    sentinel_kwargs=sentinel_kwargs,
                     socket_timeout=self._settings.redis_socket_timeout,
                     socket_connect_timeout=self._settings.redis_socket_connect_timeout,
                 )
@@ -111,8 +132,8 @@ class StatusService:
                 await self._redis.ping()
                 logger.info("StatusService: Redis Sentinel connected")
             except Exception as e:
-                logger.exception(f"StatusService: Failed to connect to Redis: {e}")
-                raise
+                logger.warning(f"StatusService: Redis unavailable (using default status): {e}")
+                self._redis = None
 
     async def disconnect(self) -> None:
         """Disconnect from Redis."""

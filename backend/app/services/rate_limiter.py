@@ -66,9 +66,20 @@ class RateLimiter:
 
                 logger.info(f"Connecting to Redis Sentinel: nodes={sentinel_nodes}")
 
-                # Create Sentinel instance (no password needed for Sentinel itself)
+                # Sentinel nodes may require auth (requirepass); use redis_password if not set
+                sentinel_pass = (
+                    self._settings.redis_sentinel_password or self._settings.redis_password
+                )
+                sentinel_kwargs = {
+                    "socket_timeout": self._settings.redis_socket_timeout,
+                    "socket_connect_timeout": self._settings.redis_socket_connect_timeout,
+                }
+                if sentinel_pass:
+                    sentinel_kwargs["password"] = sentinel_pass
+
                 self._sentinel = Sentinel(
                     sentinel_nodes,
+                    sentinel_kwargs=sentinel_kwargs,
                     socket_timeout=self._settings.redis_socket_timeout,
                     socket_connect_timeout=self._settings.redis_socket_connect_timeout,
                 )
@@ -100,9 +111,11 @@ class RateLimiter:
                 )
 
             except Exception as sentinel_error:
-                logger.exception(f"Failed to connect to Redis: {sentinel_error}")
-                # Re-raise to fail fast on startup
-                raise
+                logger.warning(
+                    f"Redis unavailable (rate limiting disabled): {sentinel_error}"
+                )
+                self._redis = None
+                self._sentinel = None
 
     async def disconnect(self) -> None:
         """Disconnect from Redis."""
