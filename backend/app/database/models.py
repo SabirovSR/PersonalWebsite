@@ -26,6 +26,8 @@ class ContactRecord(Base):
     message: Mapped[str] = mapped_column(Text, nullable=False)
     channels: Mapped[dict] = mapped_column(JSON, nullable=False)  # List of channel names
     contacts: Mapped[dict] = mapped_column(JSON, nullable=False)  # Contact info dict
+    form_source: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    tariff: Mapped[str | None] = mapped_column(String(32), nullable=True)
     ip_address: Mapped[str] = mapped_column(String(45), nullable=True)
     user_agent: Mapped[str] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)

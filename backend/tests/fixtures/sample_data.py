@@ -1,5 +1,5 @@
 """Sample data for tests."""
-from app.models import ContactChannels, ContactFormRequest, Contacts
+from app.models import ContactChannel, ContactFormRequest, ContactInfo
 
 
 def get_sample_contact_request() -> dict:
@@ -20,8 +20,8 @@ def get_sample_contact_model() -> ContactFormRequest:
     return ContactFormRequest(
         name="John Doe",
         message="Hello! I would like to discuss a project.",
-        channels=[ContactChannels.telegram, ContactChannels.email],
-        contacts=Contacts(
+        channels=[ContactChannel.TELEGRAM, ContactChannel.EMAIL],
+        contacts=ContactInfo(
             telegram="@johndoe",
             email="john@example.com",
         ),

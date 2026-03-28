@@ -18,7 +18,7 @@ from aiogram.types import (
 )
 
 from app.config import get_settings
-from app.models import ContactMessage
+from app.models import ContactMessage, FormSource
 from app.services.status_service import BLOG_PUBSUB_CHANNEL, STATUSES, status_service
 
 logger = logging.getLogger(__name__)
@@ -652,8 +652,32 @@ async def send_notification(contact: ContactMessage) -> bool:
 
     timestamp = contact.created_at.strftime("%d.%m.%Y %H:%M")
 
-    text = (
-        f"📬 <b>Новая заявка с сайта!</b>\n\n"
+    tariff_labels = {
+        "basic": "Базовый",
+        "advanced": "Продвинутый",
+        "infra": "Инфраструктура",
+        "custom": "Кастом / MVP",
+        "unsure": "Нужна консультация",
+    }
+    source_label = (
+        "Страница «Для бизнеса»"
+        if contact.form_source == FormSource.BUSINESS
+        else "Главная страница"
+    )
+    header = (
+        "💼 <b>Заявка (бизнес)</b>"
+        if contact.form_source == FormSource.BUSINESS
+        else "📬 <b>Новая заявка с сайта!</b>"
+    )
+
+    text = f"{header}\n\n"
+    text += f"📍 <b>Источник:</b> {source_label}\n"
+    if contact.tariff:
+        tr = contact.tariff.value
+        tariff_human = tariff_labels.get(tr, tr)
+        text += f"📦 <b>Тариф:</b> {_escape_html(tariff_human)}\n"
+    text += "\n"
+    text += (
         f"👤 <b>Имя:</b> {_escape_html(contact.name)}\n\n"
         f"📝 <b>Сообщение:</b>\n{_escape_html(contact.message)}\n\n"
         f"📞 <b>Способы связи:</b>\n"

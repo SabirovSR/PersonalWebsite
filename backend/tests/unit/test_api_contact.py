@@ -194,4 +194,56 @@ async def test_submit_contact_rate_limit(
     )
     
     assert response.status_code == 429
-    assert "rate limit" in response.json()["detail"].lower()
+    detail = response.json()["detail"]
+    assert isinstance(detail, dict)
+    assert detail.get("code") == "rate_limited"
+    assert isinstance(detail.get("retry_after_seconds"), int)
+    assert detail["retry_after_seconds"] >= 0
+
+
+@pytest.mark.asyncio
+async def test_submit_contact_business_requires_tariff(
+    test_client: AsyncClient,
+    valid_api_key: str,
+):
+    """Business form without tariff should fail validation."""
+    data = {
+        "name": "John Doe",
+        "message": "Need integration",
+        "channels": ["telegram"],
+        "contacts": {"telegram": "@john"},
+        "form_source": "business",
+    }
+    response = await test_client.post(
+        "/api/public/contact",
+        json=data,
+        headers={"api-key": valid_api_key},
+    )
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_submit_contact_business_with_tariff(
+    test_client: AsyncClient,
+    valid_api_key: str,
+    mock_kafka_producer: AsyncMock,
+):
+    """Business form with tariff is accepted."""
+    mock_kafka_producer.send_contact_message.return_value = True
+    data = {
+        "name": "John Doe",
+        "message": "Need integration",
+        "channels": ["telegram"],
+        "contacts": {"telegram": "@john"},
+        "form_source": "business",
+        "tariff": "advanced",
+    }
+    response = await test_client.post(
+        "/api/public/contact",
+        json=data,
+        headers={"api-key": valid_api_key},
+    )
+    assert response.status_code == 200
+    sent = mock_kafka_producer.send_contact_message.call_args[0][0]
+    assert sent.form_source.value == "business"
+    assert sent.tariff.value == "advanced"

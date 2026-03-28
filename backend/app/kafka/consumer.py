@@ -83,10 +83,11 @@ class KafkaConsumerService:
 
                 for tp, records in messages.items():
                     for record in records:
-                        await self._process_message(record.value)
-
-                        # Commit offset after successful processing
-                        await self._consumer.commit()
+                        # Commit only when handling is done (Telegram OK, or safely stored in DLQ).
+                        # If both fail, skip commit so the message is redelivered after fix/deploy.
+                        should_commit = await self._process_message(record.value)
+                        if should_commit:
+                            await self._consumer.commit()
 
             except asyncio.CancelledError:
                 logger.info("Consumer loop cancelled")
@@ -95,28 +96,45 @@ class KafkaConsumerService:
                 logger.exception(f"Error in consumer loop: {e}")
                 await asyncio.sleep(5)  # Back off on error
 
-    async def _process_message(self, data: dict) -> None:
-        """Process a single contact message."""
+    async def _process_message(self, data: dict) -> bool:
+        """
+        Process a single contact message.
+
+        Returns True if the consumer should commit offset (success path or DLQ persisted).
+        Returns False if nothing was reliably stored — Kafka will redeliver this message.
+        """
         try:
-            message = ContactMessage(**data)
+            message = ContactMessage.model_validate(data)
             logger.info(f"Processing contact message: {message.id}")
 
-            # 1. Save to database
-            await self._db.save_contact(message)
-            logger.info(f"Saved contact to database: {message.id}")
+            # 1. Save to database (non-fatal: Telegram must still work if e.g. columns are missing)
+            try:
+                await self._db.save_contact(message)
+                logger.info(f"Saved contact to database: {message.id}")
+            except Exception as db_err:
+                logger.exception(
+                    "Failed to save contact to DB; continuing with Telegram: %s",
+                    db_err,
+                )
 
             # 2. Send Telegram notification with retry
             success = await self._send_with_retry(message)
 
             if not success:
                 logger.error(f"Failed to send notification for {message.id}")
-                await self._send_to_dlq(data, "telegram_notification_failed")
+                dlq_ok = await self._send_to_dlq(data, "telegram_notification_failed")
+                if not dlq_ok:
+                    return False
+                logger.info(f"Message {message.id} sent to DLQ after Telegram failure")
+                return True
 
             logger.info(f"Successfully processed message: {message.id}")
+            return True
 
         except Exception as e:
             logger.exception(f"Failed to process message: {e}")
-            await self._send_to_dlq(data, str(e))
+            dlq_ok = await self._send_to_dlq(data, str(e))
+            return dlq_ok
 
     async def _send_with_retry(
         self,
@@ -138,11 +156,11 @@ class KafkaConsumerService:
 
         return False
 
-    async def _send_to_dlq(self, data: dict, error: str) -> None:
-        """Send failed message to Dead Letter Queue."""
+    async def _send_to_dlq(self, data: dict, error: str) -> bool:
+        """Send failed message to Dead Letter Queue. Returns True if write succeeded."""
         if self._dlq_producer is None:
             logger.error("DLQ producer not available")
-            return
+            return False
 
         try:
             dlq_message = {
@@ -155,5 +173,7 @@ class KafkaConsumerService:
                 value=dlq_message,
             )
             logger.info(f"Message sent to DLQ: {error}")
+            return True
         except Exception as e:
             logger.exception(f"Failed to send to DLQ: {e}")
+            return False

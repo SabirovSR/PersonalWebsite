@@ -31,7 +31,7 @@ describe('Contact Form Integration', () => {
     render(<Contact />);
 
     // Step 1: User sees the form
-    expect(screen.getByText(/Давайте общаться!/i)).toBeInTheDocument();
+    expect(screen.getByText(/Напишите мне/i)).toBeInTheDocument();
 
     // Step 2: User fills in their name
     const nameInput = screen.getByPlaceholderText(/Как вас зовут/i);
@@ -46,8 +46,8 @@ describe('Contact Form Integration', () => {
     await user.click(emailButton);
 
     // Step 5: User fills in contact information
-    const telegramInput = screen.getByPlaceholderText('@username');
-    await user.type(telegramInput, '@ivanpetrov');
+    const telegramInput = screen.getByPlaceholderText('username');
+    await user.type(telegramInput, 'ivanpetrov');
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText('your@email.com')).toBeInTheDocument();
@@ -88,6 +88,8 @@ describe('Contact Form Integration', () => {
         telegram: '@ivanpetrov',
         email: 'ivan@example.com',
       },
+      form_source: 'home',
+      tariff: null,
     });
 
     // Step 9: Success message is displayed
@@ -116,7 +118,7 @@ describe('Contact Form Integration', () => {
       screen.getByPlaceholderText(/Расскажите о вашем проекте/i),
       'Test message'
     );
-    await user.type(screen.getByPlaceholderText('@username'), '@testuser');
+    await user.type(screen.getByPlaceholderText('username'), 'testuser');
 
     // Submit
     await user.click(screen.getByRole('button', { name: /Отправить сообщение/i }));
@@ -131,12 +133,19 @@ describe('Contact Form Integration', () => {
   });
 
   it('handles rate limit error with proper message', async () => {
-    // Mock rate limit response
+    // Mock rate limit response (aligned with API: detail object + Retry-After)
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: false,
       status: 429,
+      headers: {
+        get: (name: string) =>
+          name.toLowerCase() === 'retry-after' ? '120' : null,
+      },
       json: async () => ({
-        detail: 'Rate limit exceeded. Try again later.',
+        detail: {
+          code: 'rate_limited',
+          retry_after_seconds: 120,
+        },
       }),
     });
 
@@ -149,12 +158,13 @@ describe('Contact Form Integration', () => {
       screen.getByPlaceholderText(/Расскажите о вашем проекте/i),
       'Test message'
     );
-    await user.type(screen.getByPlaceholderText('@username'), '@testuser');
+    await user.type(screen.getByPlaceholderText('username'), 'testuser');
     await user.click(screen.getByRole('button', { name: /Отправить сообщение/i }));
 
-    // Error message should be displayed
+    // Rate-limit copy (minutes), not the generic send failure
     await waitFor(() => {
-      expect(screen.getByText(/Не удалось отправить/i)).toBeInTheDocument();
+      expect(screen.getByText(/Слишком частые отправки/i)).toBeInTheDocument();
+      expect(screen.getByText(/2 мин/i)).toBeInTheDocument();
     });
   });
 
@@ -168,7 +178,7 @@ describe('Contact Form Integration', () => {
     render(<Contact />);
 
     // Initially telegram is selected
-    expect(screen.getByPlaceholderText('@username')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('username')).toBeInTheDocument();
 
     // Add phone channel
     const phoneButton = screen.getByRole('button', { name: /Телефон/i });
@@ -184,7 +194,7 @@ describe('Contact Form Integration', () => {
 
     // Telegram input should be gone
     await waitFor(() => {
-      expect(screen.queryByPlaceholderText('@username')).not.toBeInTheDocument();
+      expect(screen.queryByPlaceholderText('username')).not.toBeInTheDocument();
     });
 
     // Phone input should remain

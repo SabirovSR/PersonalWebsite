@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.database.models import Base, ContactRecord
-from app.models import ContactChannels
 
 
 # Note: These tests would require a test database setup

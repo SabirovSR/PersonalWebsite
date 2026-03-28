@@ -28,6 +28,7 @@ describe('Navigation Component', () => {
     expect(screen.getByText('навыки')).toBeInTheDocument();
     expect(screen.getByText('опыт')).toBeInTheDocument();
     expect(screen.getByText('проекты')).toBeInTheDocument();
+    expect(screen.getByText('для бизнеса')).toBeInTheDocument();
     expect(screen.getByText('контакты')).toBeInTheDocument();
   });
 
@@ -112,11 +113,12 @@ describe('Navigation Component', () => {
     render(<Navigation />);
     
     const links = [
-      { text: 'обо мне', href: '#about' },
-      { text: 'навыки', href: '#skills' },
-      { text: 'опыт', href: '#experience' },
-      { text: 'проекты', href: '#projects' },
-      { text: 'контакты', href: '#contact' },
+      { text: 'обо мне', href: '/ru#about' },
+      { text: 'навыки', href: '/ru#skills' },
+      { text: 'опыт', href: '/ru#experience' },
+      { text: 'проекты', href: '/ru#projects' },
+      { text: 'для бизнеса', href: '/ru/business' },
+      { text: 'контакты', href: '/ru#contact' },
     ];
     
     links.forEach(({ text, href }) => {
@@ -125,10 +127,10 @@ describe('Navigation Component', () => {
     });
   });
 
-  it('logo links to top of page', () => {
+  it('logo links to home for current locale', () => {
     render(<Navigation />);
     
     const logo = screen.getByText('sabirov.tech').closest('a');
-    expect(logo).toHaveAttribute('href', '#');
+    expect(logo).toHaveAttribute('href', '/ru');
   });
 });

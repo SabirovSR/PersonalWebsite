@@ -5,10 +5,7 @@ import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
 import type { OwnerStatus } from '@/lib/api.server';
-
-function applyStatusTheme(status: OwnerStatus) {
-  document.documentElement.setAttribute('data-status', status.code);
-}
+import { useOwnerStatus } from '@/hooks/useOwnerStatus';
 
 export function Hero({ initialStatus = null }: { initialStatus?: OwnerStatus | null }) {
   const t = useTranslations('hero');
@@ -17,7 +14,7 @@ export function Hero({ initialStatus = null }: { initialStatus?: OwnerStatus | n
   const sectionRef = useRef<HTMLElement>(null);
   const [typedText, setTypedText] = useState('');
   const fullText = t('subtitle');
-  const [ownerStatus, setOwnerStatus] = useState<OwnerStatus | null>(initialStatus);
+  const ownerStatus = useOwnerStatus(initialStatus ?? null);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -40,65 +37,6 @@ export function Hero({ initialStatus = null }: { initialStatus?: OwnerStatus | n
     }, 40);
 
     return () => clearInterval(timer);
-  }, []);
-
-  // Apply the server-provided status theme on first mount so CSS variables
-  // are set before any paint, preventing the status badge from flashing.
-  useEffect(() => {
-    if (initialStatus) applyStatusTheme(initialStatus);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    let ws: WebSocket | null = null;
-    let reconnectTimer: ReturnType<typeof setTimeout>;
-    let unmounted = false;
-
-    const applyStatus = (data: OwnerStatus) => {
-      setOwnerStatus(data);
-      applyStatusTheme(data);
-    };
-
-    // HTTP fallback: only needed when no server-side initial status was provided.
-    if (!initialStatus) {
-      fetch('/api/public/status')
-        .then((r) => r.ok ? r.json() : null)
-        .then((d: OwnerStatus | null) => { if (d && !unmounted) applyStatus(d); })
-        .catch(() => {});
-    }
-
-    // WebSocket via same-origin URL so it proxies through the Next.js rewrite
-    // (/api/ws/status → backend:8000/api/ws/status). This avoids any
-    // cross-domain TLS / browser-security issues.
-    const connectWs = () => {
-      if (unmounted) return;
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/api/ws/status`;
-
-      ws = new WebSocket(wsUrl);
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data) as OwnerStatus & { ping?: boolean };
-          if (data.ping) return;
-          applyStatus(data);
-        } catch { /* ignore malformed frames */ }
-      };
-
-      ws.onclose = () => {
-        if (!unmounted) reconnectTimer = setTimeout(connectWs, 3000);
-      };
-
-      ws.onerror = () => { ws?.close(); };
-    };
-
-    connectWs();
-
-    return () => {
-      unmounted = true;
-      clearTimeout(reconnectTimer);
-      ws?.close();
-    };
   }, []);
 
   const statusLabel = ownerStatus

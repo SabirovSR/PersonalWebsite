@@ -29,7 +29,7 @@ test.describe('Contact Form', () => {
 
   test('can select multiple contact channels', async ({ page }) => {
     // Telegram is selected by default
-    await expect(page.getByPlaceholderText('@username')).toBeVisible();
+    await expect(page.getByPlaceholderText('username')).toBeVisible();
     
     // Click to add email
     await page.getByRole('button', { name: /Email/i }).click();
@@ -38,7 +38,7 @@ test.describe('Contact Form', () => {
     await expect(page.getByPlaceholderText('your@email.com')).toBeVisible();
     
     // Both inputs should be visible
-    await expect(page.getByPlaceholderText('@username')).toBeVisible();
+    await expect(page.getByPlaceholderText('username')).toBeVisible();
     await expect(page.getByPlaceholderText('your@email.com')).toBeVisible();
   });
 
@@ -79,7 +79,7 @@ test.describe('Contact Form', () => {
     // Fill form
     await page.getByPlaceholderText(/Как вас зовут/i).fill('Иван Петров');
     await page.getByPlaceholderText(/Расскажите о вашем проекте/i).fill('Хочу обсудить проект');
-    await page.getByPlaceholderText('@username').fill('@ivanpetrov');
+    await page.getByPlaceholderText('username').fill('ivanpetrov');
     
     // Submit form
     await page.getByRole('button', { name: /Отправить сообщение/i }).click();
@@ -105,7 +105,7 @@ test.describe('Contact Form', () => {
     // Fill and submit form
     await page.getByPlaceholderText(/Как вас зовут/i).fill('Test User');
     await page.getByPlaceholderText(/Расскажите о вашем проекте/i).fill('Test');
-    await page.getByPlaceholderText('@username').fill('@test');
+    await page.getByPlaceholderText('username').fill('test');
     
     await page.getByRole('button', { name: /Отправить сообщение/i }).click();
     
@@ -128,7 +128,7 @@ test.describe('Contact Form', () => {
     // Fill and submit form
     await page.getByPlaceholderText(/Как вас зовут/i).fill('Test User');
     await page.getByPlaceholderText(/Расскажите о вашем проекте/i).fill('Test');
-    await page.getByPlaceholderText('@username').fill('@test');
+    await page.getByPlaceholderText('username').fill('test');
     
     await page.getByRole('button', { name: /Отправить сообщение/i }).click();
     
@@ -166,12 +166,12 @@ test.describe('Contact Form', () => {
     
     const nameInput = page.getByPlaceholderText(/Как вас зовут/i);
     const messageInput = page.getByPlaceholderText(/Расскажите о вашем проекте/i);
-    const telegramInput = page.getByPlaceholderText('@username');
+    const telegramInput = page.getByPlaceholderText('username');
     
     // Fill form
     await nameInput.fill('Test User');
     await messageInput.fill('Test message');
-    await telegramInput.fill('@testuser');
+    await telegramInput.fill('testuser');
     
     // Submit
     await page.getByRole('button', { name: /Отправить сообщение/i }).click();

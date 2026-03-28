@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useInView } from '@/hooks/useInView';
 import clsx from 'clsx';
 import { useTranslations } from 'next-intl';
+import { TariffSelect } from '@/components/TariffSelect';
 
 // Contact channel types
 type ContactChannel = 'telegram' | 'vk' | 'max' | 'email' | 'phone' | 'website';
@@ -16,9 +17,53 @@ interface ChannelConfig {
   pattern?: string;
 }
 
-export function Contact({ hasBlog = false }: { hasBlog?: boolean }) {
+const BUSINESS_TARIFF_IDS = ['basic', 'advanced', 'infra', 'custom', 'unsure'] as const;
+export type BusinessTariffId = (typeof BUSINESS_TARIFF_IDS)[number];
+
+function getRetryAfterSeconds(data: unknown, response: Response): number | undefined {
+  if (data && typeof data === 'object' && 'detail' in data) {
+    const detail = (data as { detail: unknown }).detail;
+    if (
+      detail &&
+      typeof detail === 'object' &&
+      detail !== null &&
+      'retry_after_seconds' in detail
+    ) {
+      const n = Number((detail as { retry_after_seconds: number }).retry_after_seconds);
+      if (!Number.isNaN(n) && n >= 0) {
+        return n;
+      }
+    }
+  }
+  const h = response.headers.get('Retry-After');
+  if (h) {
+    const n = parseInt(h, 10);
+    if (!Number.isNaN(n) && n >= 0) {
+      return n;
+    }
+  }
+  return undefined;
+}
+
+export interface ContactProps {
+  hasBlog?: boolean;
+  /** Where the form was submitted from — sent to API */
+  formSource?: 'home' | 'business';
+  /** Show tariff dropdown (business page) */
+  showTariffSelect?: boolean;
+  /** Use business.contactSection strings for the block header */
+  contactHeaderScope?: 'contact' | 'business';
+}
+
+export function Contact({
+  hasBlog = false,
+  formSource = 'home',
+  showTariffSelect = false,
+  contactHeaderScope = 'contact',
+}: ContactProps) {
   const { ref, inView } = useInView();
   const t = useTranslations('contact');
+  const tb = useTranslations('business.contactSection');
   const [statusCode, setStatusCode] = useState('online');
 
   useEffect(() => {
@@ -67,6 +112,7 @@ export function Contact({ hasBlog = false }: { hasBlog?: boolean }) {
     message: '',
     contacts: {} as Record<ContactChannel, string>,
   });
+  const [tariff, setTariff] = useState<BusinessTariffId | ''>('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState('');
 
@@ -78,6 +124,13 @@ export function Contact({ hasBlog = false }: { hasBlog?: boolean }) {
       }
       return [...prev, channel];
     });
+  };
+
+  /** Telegram: always "@nickname", user types only the nick part after @ */
+  const formatTelegram = (raw: string): string => {
+    const body = (raw.startsWith('@') ? raw.slice(1) : raw).replace(/[^a-zA-Z0-9_]/g, '');
+    if (body.length === 0) return '@';
+    return `@${body.slice(0, 32)}`;
   };
 
   /** Format a raw digit string into +7 (XXX) XXX-XX-XX */
@@ -99,7 +152,12 @@ export function Contact({ hasBlog = false }: { hasBlog?: boolean }) {
   };
 
   const handleContactChange = (channel: ContactChannel, value: string) => {
-    const formatted = channel === 'phone' ? formatPhone(value) : value;
+    const formatted =
+      channel === 'phone'
+        ? formatPhone(value)
+        : channel === 'telegram'
+          ? formatTelegram(value)
+          : value;
     setFormData(prev => ({
       ...prev,
       contacts: {
@@ -118,6 +176,15 @@ export function Contact({ hasBlog = false }: { hasBlog?: boolean }) {
     }
   };
 
+  const handleTelegramFocus = () => {
+    if (!formData.contacts['telegram']?.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        contacts: { ...prev.contacts, telegram: '@' },
+      }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('loading');
@@ -129,9 +196,25 @@ export function Contact({ hasBlog = false }: { hasBlog?: boolean }) {
       return;
     }
 
+    if (showTariffSelect && !tariff) {
+      setStatus('error');
+      setStatusMessage(t('form.validation.selectTariff'));
+      return;
+    }
+
     // Check that all selected channels have contact info
     for (const channel of selectedChannels) {
-      if (!formData.contacts[channel]?.trim()) {
+      const raw = formData.contacts[channel]?.trim() ?? '';
+      if (channel === 'telegram') {
+        const nick = raw.startsWith('@') ? raw.slice(1) : raw;
+        if (!nick.length) {
+          setStatus('error');
+          setStatusMessage(`${t('form.validation.fillContact')} ${t(`channels.${channel}`)}`);
+          return;
+        }
+        continue;
+      }
+      if (!raw) {
         setStatus('error');
         setStatusMessage(`${t('form.validation.fillContact')} ${t(`channels.${channel}`)}`);
         return;
@@ -150,19 +233,46 @@ export function Contact({ hasBlog = false }: { hasBlog?: boolean }) {
           message: formData.message,
           channels: selectedChannels,
           contacts: formData.contacts,
+          form_source: formSource,
+          tariff: showTariffSelect && tariff ? tariff : null,
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (response.ok && data.status === 'queued') {
         setStatus('success');
         setStatusMessage(t('form.success'));
         setFormData({ name: '', message: '', contacts: {} as Record<ContactChannel, string> });
         setSelectedChannels(['telegram']);
-      } else {
-        throw new Error(data.message || 'Ошибка отправки');
+        setTariff('');
+        return;
       }
+
+      if (response.status === 429) {
+        setStatus('error');
+        const retrySec = getRetryAfterSeconds(data, response);
+        if (retrySec != null && retrySec > 0) {
+          if (retrySec >= 60) {
+            const minutes = Math.max(1, Math.ceil(retrySec / 60));
+            setStatusMessage(t('form.rateLimitedMinutes', { minutes }));
+          } else {
+            const seconds = Math.max(1, Math.ceil(retrySec));
+            setStatusMessage(t('form.rateLimitedSeconds', { seconds }));
+          }
+        } else {
+          setStatusMessage(t('form.rateLimited'));
+        }
+        return;
+      }
+
+      throw new Error(
+        typeof data?.detail === 'string'
+          ? data.detail
+          : typeof data?.message === 'string'
+            ? data.message
+            : 'Ошибка отправки'
+      );
     } catch {
       setStatus('error');
       setStatusMessage(t('form.error'));
@@ -187,7 +297,9 @@ export function Contact({ hasBlog = false }: { hasBlog?: boolean }) {
           )}
         >
           <span className="font-mono text-sm text-[var(--accent-primary)] block mb-4">
-            {t(hasBlog ? 'section' : 'sectionAlt')}
+            {contactHeaderScope === 'business'
+              ? tb('section')
+              : t(hasBlog ? 'section' : 'sectionAlt')}
           </span>
           <AnimatePresence mode="wait">
             <motion.div
@@ -198,10 +310,22 @@ export function Contact({ hasBlog = false }: { hasBlog?: boolean }) {
               transition={{ duration: 0.3 }}
             >
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                {isBusy ? t('busyTitle') : t('title')}
+                {contactHeaderScope === 'business'
+                  ? isBusy
+                    ? tb('busyTitle')
+                    : tb('title')
+                  : isBusy
+                    ? t('busyTitle')
+                    : t('title')}
               </h2>
               <p className="text-lg text-[var(--text-secondary)] max-w-[600px] mx-auto">
-                {isBusy ? t('busyDescription') : t('description')}
+                {contactHeaderScope === 'business'
+                  ? isBusy
+                    ? tb('busyDescription')
+                    : tb('description')
+                  : isBusy
+                    ? t('busyDescription')
+                    : t('description')}
               </p>
             </motion.div>
           </AnimatePresence>
@@ -223,7 +347,13 @@ export function Contact({ hasBlog = false }: { hasBlog?: boolean }) {
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.3 }}
               >
-                {isBusy ? t('busyText') : t('text')}
+                {contactHeaderScope === 'business'
+                  ? isBusy
+                    ? tb('busyText')
+                    : t('text')
+                  : isBusy
+                    ? t('busyText')
+                    : t('text')}
               </motion.p>
             </AnimatePresence>
 
@@ -283,6 +413,21 @@ export function Contact({ hasBlog = false }: { hasBlog?: boolean }) {
               />
             </div>
 
+            {showTariffSelect && (
+              <div className="mb-5">
+                <TariffSelect
+                  label={t('form.tariff')}
+                  placeholder={t('form.tariffPlaceholder')}
+                  value={tariff}
+                  onChange={(v) => setTariff(v as BusinessTariffId | '')}
+                  options={BUSINESS_TARIFF_IDS.map((id) => ({
+                    value: id,
+                    label: t(`form.tariffs.${id}`),
+                  }))}
+                />
+              </div>
+            )}
+
             {/* Channel Selection */}
             <div className="mb-5">
               <label className="block font-mono text-sm text-[var(--text-secondary)] mb-3">
@@ -326,7 +471,13 @@ export function Contact({ hasBlog = false }: { hasBlog?: boolean }) {
                         placeholder={t(`channels.placeholders.${channelId}`)}
                         value={formData.contacts[channelId] || ''}
                         onChange={e => handleContactChange(channelId, e.target.value)}
-                        onFocus={channelId === 'website' ? handleWebsiteFocus : undefined}
+                        onFocus={
+                          channelId === 'website'
+                            ? handleWebsiteFocus
+                            : channelId === 'telegram'
+                              ? handleTelegramFocus
+                              : undefined
+                        }
                         required
                       />
                     </motion.div>

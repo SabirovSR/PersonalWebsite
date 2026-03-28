@@ -8,6 +8,8 @@ from .contact import (
     ContactInfo,
     ContactMessage,
     ContactResponse,
+    ContactTariff,
+    FormSource,
 )
 
 __all__ = [
@@ -16,4 +18,6 @@ __all__ = [
     "ContactFormRequest",
     "ContactMessage",
     "ContactResponse",
+    "ContactTariff",
+    "FormSource",
 ]

@@ -6,7 +6,7 @@ from datetime import datetime
 from enum import Enum
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 
 class ContactChannel(str, Enum):
@@ -19,6 +19,23 @@ class ContactChannel(str, Enum):
     WEBSITE = "website"
     MAX = "max"  # MAX Messenger
     WHATSAPP = "whatsapp"  # Deprecated, keep for backwards compatibility
+
+
+class FormSource(str, Enum):
+    """Where the contact form was submitted."""
+
+    HOME = "home"
+    BUSINESS = "business"
+
+
+class ContactTariff(str, Enum):
+    """Selected service tier (business page)."""
+
+    BASIC = "basic"
+    ADVANCED = "advanced"
+    INFRA = "infra"
+    CUSTOM = "custom"
+    UNSURE = "unsure"
 
 
 class ContactInfo(BaseModel):
@@ -60,11 +77,21 @@ class ContactFormRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=5000)
     channels: list[ContactChannel] = Field(..., min_length=1)
     contacts: ContactInfo
+    form_source: FormSource = FormSource.HOME
+    tariff: ContactTariff | None = None
 
     @field_validator("name", "message")
     @classmethod
     def strip_whitespace(cls, v: str) -> str:
         return v.strip()
+
+    @model_validator(mode="after")
+    def normalize_tariff_for_source(self) -> "ContactFormRequest":
+        if self.form_source == FormSource.HOME:
+            return self.model_copy(update={"tariff": None})
+        if self.tariff is None:
+            raise ValueError("tariff is required when form_source is business")
+        return self
 
 
 class ContactMessage(BaseModel):
@@ -75,6 +102,8 @@ class ContactMessage(BaseModel):
     message: str
     channels: list[ContactChannel]
     contacts: ContactInfo
+    form_source: FormSource = FormSource.HOME
+    tariff: ContactTariff | None = None
     ip_address: str | None = None
     user_agent: str | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)

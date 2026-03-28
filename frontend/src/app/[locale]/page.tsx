@@ -1,6 +1,7 @@
 import dynamic from 'next/dynamic';
 import { Navigation } from '@/components/Navigation';
 import { Hero } from '@/components/Hero';
+import { BusinessPromo } from '@/components/BusinessPromo';
 import { BlogContactSection } from '@/components/BlogContactSection';
 import { fetchStatus, fetchBlogPosts } from '@/lib/api.server';
 
@@ -25,6 +26,7 @@ export default async function Home() {
       <Skills />
       <Experience />
       <Projects />
+      <BusinessPromo />
       <BlogContactSection initialPosts={initialPosts} />
       <Footer />
     </main>

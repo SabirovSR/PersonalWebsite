@@ -50,6 +50,8 @@ async def test_complete_contact_flow(
     assert sent_message.name == sample_contact_data["name"]
     assert sent_message.message == sample_contact_data["message"]
     assert len(sent_message.channels) == len(sample_contact_data["channels"])
+    assert sent_message.form_source.value == "home"
+    assert sent_message.tariff is None
 
 
 @pytest.mark.asyncio

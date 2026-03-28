@@ -2,18 +2,20 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useTheme } from './ThemeProvider';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 export function Navigation() {
   const { theme, toggleTheme } = useTheme();
   const t = useTranslations('nav');
+  const locale = useLocale();
 
   const navLinks = [
-    { href: '#about', label: t('about') },
-    { href: '#skills', label: t('skills') },
-    { href: '#experience', label: t('experience') },
-    { href: '#projects', label: t('projects') },
-    { href: '#contact', label: t('contact') },
+    { href: `/${locale}#about`, label: t('about') },
+    { href: `/${locale}#skills`, label: t('skills') },
+    { href: `/${locale}#experience`, label: t('experience') },
+    { href: `/${locale}#projects`, label: t('projects') },
+    { href: `/${locale}/business`, label: t('business') },
+    { href: `/${locale}#contact`, label: t('contact') },
   ];
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -91,7 +93,7 @@ export function Navigation() {
     >
       <div className="max-w-[1200px] mx-auto px-6 flex justify-between items-center">
         {/* Logo */}
-        <a href="#" className="font-mono text-xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+        <a href={`/${locale}`} className="font-mono text-xl font-bold text-[var(--text-primary)] flex items-center gap-2">
           <span className="text-[var(--accent-primary)] animate-blink">&gt;</span>
           sabirov.tech
         </a>

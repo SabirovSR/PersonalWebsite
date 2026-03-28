@@ -4,6 +4,7 @@
     "skills": "Skills",
     "experience": "Experience",
     "projects": "Projects",
+    "business": "For business",
     "contact": "Contact"
   },
   "hero": {
@@ -135,13 +136,27 @@
       "message": "// Message *",
       "messagePlaceholder": "Tell me about your project or idea...",
       "channels": "// How to reach you? *",
+      "tariff": "// Tier you're interested in",
+      "tariffPlaceholder": "Select an option",
+      "tariffs": {
+        "unspecified": "Not specified",
+        "basic": "Basic (15–30k ₽)",
+        "advanced": "Advanced (40–100k ₽)",
+        "infra": "Infrastructure + retainer",
+        "custom": "Custom / MVP (from 150k ₽)",
+        "unsure": "Not sure yet — need a consult"
+      },
       "submit": "Send message →",
       "sending": "Sending...",
-      "success": "✓ Message sent! I'll get back to you soon.",
-      "error": "✗ Failed to send. Please try again later or email me at contact@sabirov.tech",
+      "success": "Message sent! I'll get back to you soon.",
+      "error": "Failed to send. Please try again later or email me at contact@sabirov.tech",
+      "rateLimited": "You're sending messages too often. Wait a bit and try again, or email contact@sabirov.tech",
+      "rateLimitedMinutes": "Too many submissions. You can try again in about {minutes} min.",
+      "rateLimitedSeconds": "Too many submissions. You can try again in about {seconds} s.",
       "validation": {
         "fillRequired": "Please fill in all required fields",
-        "fillContact": "Please provide contact info for:"
+        "fillContact": "Please provide contact info for:",
+        "selectTariff": "Please select a tier or “Not sure yet”"
       }
     },
     "channels": {
@@ -152,7 +167,7 @@
       "website": "Website",
       "max": "MAX",
       "placeholders": {
-        "telegram": "@username",
+        "telegram": "username",
         "vk": "VK ID or profile link",
         "max": "MAX ID or link",
         "email": "your@email.com",
@@ -164,6 +179,130 @@
       "email": "contact@sabirov.tech",
       "telegram": "Telegram",
       "github": "GitHub"
+    }
+  },
+  "business": {
+    "meta": {
+      "title": "Business services — Saveliy Sabirov",
+      "description": "Messenger integrations, media and document automation, reliable data sync. Fixed pricing and ongoing support."
+    },
+    "promo": {
+      "badge": "// For business",
+      "title": "Sole proprietor & turnkey integrations",
+      "description": "Omnichannel leads, automation, and reliable data bridges between systems — with clear pricing and support.",
+      "cta": "Services and pricing"
+    },
+    "hero": {
+      "section": "// For business",
+      "title": "Business outcomes, not “Python by the hour”",
+      "lead": "I ship packaged mini-products with fixed price and timeline. Operating as a sole proprietor (no employees) — predictable scope for you.",
+      "points": [
+        "Single entry point for leads from messengers and the site",
+        "Automation for transcripts, documents, and repetitive work",
+        "Bridges between accounting, website, and CRM without manual copy-paste"
+      ]
+    },
+    "services": {
+      "section": "// What I build",
+      "title": "End-to-end mini solutions",
+      "description": "Three typical directions aligned with your process",
+      "problemLabel": "Problem",
+      "solutionLabel": "Solution",
+      "items": [
+        {
+          "icon": "📬",
+          "title": "Omnichannel aggregators",
+          "problem": "Sales loses leads when clients write in Telegram, WhatsApp, on the site, and VK at once.",
+          "solution": "A microservice accepts REST webhooks, normalizes threads, and forwards to a Telegram bot for replies or into your CRM.",
+          "stack": "Python/C#, PostgreSQL, Docker on your VPS"
+        },
+        {
+          "icon": "🎙️",
+          "title": "Media and documents",
+          "problem": "Hours spent on call transcripts, data from scanned invoices, and processing video reviews.",
+          "solution": "Bots and internal services: meeting audio → summary and tasks via API to Jira/Trello/Bitrix.",
+          "stack": "Whisper & LLM APIs, RabbitMQ/Kafka for load"
+        },
+        {
+          "icon": "🔄",
+          "title": "Data synchronization",
+          "problem": "Legacy accounting and a new site diverge; stock levels updated manually once a day.",
+          "solution": "A reliable gateway: scheduled or broker-driven fetch, transform, and safe writes to the site DB or CRM.",
+          "stack": "Java/C#, strict typing, gRPC between services when needed"
+        }
+      ]
+    },
+    "pricing": {
+      "section": "// Pricing",
+      "title": "Fixed fee, retainer, support",
+      "description": "Budget and timeline guides; final estimate after a short call",
+      "retainer": {
+        "title": "Retainer support",
+        "description": "Integrations need care over time: API changes, tokens, servers. From 5,000 to 15,000 ₽/month per project: monitoring, DB backups, small fixes.",
+        "note": "Ideal as insurance after go-live."
+      },
+      "tiers": [
+        {
+          "id": "basic",
+          "name": "Basic",
+          "price": "15,000 – 30,000 ₽",
+          "time": "2–5 days",
+          "features": [
+            "Simple Telegram bots: landing, lead capture to admin",
+            "Google Sheets and simple API integrations",
+            "Minimal infra for the task"
+          ]
+        },
+        {
+          "id": "advanced",
+          "name": "Advanced",
+          "price": "40,000 – 100,000 ₽",
+          "time": "2–4 weeks",
+          "features": [
+            "Complex bots and small web apps",
+            "API integrations, Whisper/LLM, channel aggregation",
+            "Backend admin, PostgreSQL"
+          ]
+        },
+        {
+          "id": "infra",
+          "name": "Infrastructure",
+          "price": "from 20,000 ₽ + retainer",
+          "time": "depends on scope",
+          "features": [
+            "Docker, CI/CD, DB and backups on client servers",
+            "Monitoring and container updates",
+            "Monthly care as a separate line item"
+          ]
+        },
+        {
+          "id": "custom",
+          "name": "Custom / MVP",
+          "price": "from 150,000 ₽",
+          "time": "TBD",
+          "features": [
+            "Full backend for complex services",
+            "Hourly estimates when needed: ~1,500 – 2,500 ₽/hr",
+            "Long projects in milestones"
+          ]
+        }
+      ],
+      "examples": {
+        "title": "Packaged examples",
+        "items": [
+          { "text": "“All messengers into your CRM” — from 40,000 ₽, ~1 week" },
+          { "text": "“Bot for manager call transcripts” — from 60,000 ₽, ~2 weeks" },
+          { "text": "“CI/CD and move to Docker” — from 30,000 ₽" }
+        ]
+      }
+    },
+    "contactSection": {
+      "section": "// Request",
+      "title": "Let’s discuss your case",
+      "description": "Pick a tier and a few words about the process — I’ll reply with a rough timeline and cost.",
+      "busyTitle": "Currently unavailable",
+      "busyDescription": "I’m not taking new project inquiries right now — please come back when my status is online again. You can still send a message, but replies will be delayed.",
+      "busyText": "I can’t respond quickly to business requests at the moment. If it’s not urgent, please reach out once I’m available again."
     }
   },
   "blog": {

@@ -17,7 +17,7 @@ describe('Contact Component', () => {
   it('renders contact form', () => {
     render(<Contact />);
     
-    expect(screen.getByText(/Давайте общаться!/i)).toBeInTheDocument();
+    expect(screen.getByText(/Напишите мне/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/Как вас зовут/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/Расскажите о вашем проекте/i)).toBeInTheDocument();
   });
@@ -65,7 +65,7 @@ describe('Contact Component', () => {
     render(<Contact />);
     
     // Telegram input should be visible by default
-    expect(screen.getByPlaceholderText('@username')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('username')).toBeInTheDocument();
     
     // Add email channel
     const emailButton = screen.getByRole('button', { name: /Email/i });
@@ -115,11 +115,11 @@ describe('Contact Component', () => {
     
     const nameInput = screen.getByPlaceholderText(/Как вас зовут/i);
     const messageInput = screen.getByPlaceholderText(/Расскажите о вашем проекте/i);
-    const telegramInput = screen.getByPlaceholderText('@username');
+    const telegramInput = screen.getByPlaceholderText('username');
     
     await user.type(nameInput, 'John Doe');
     await user.type(messageInput, 'Test message');
-    await user.type(telegramInput, '@johndoe');
+    await user.type(telegramInput, 'johndoe');
     
     const submitButton = screen.getByRole('button', { name: /Отправить сообщение/i });
     await user.click(submitButton);
@@ -153,11 +153,11 @@ describe('Contact Component', () => {
     
     const nameInput = screen.getByPlaceholderText(/Как вас зовут/i);
     const messageInput = screen.getByPlaceholderText(/Расскажите о вашем проекте/i);
-    const telegramInput = screen.getByPlaceholderText('@username');
+    const telegramInput = screen.getByPlaceholderText('username');
     
     await user.type(nameInput, 'John Doe');
     await user.type(messageInput, 'Test message');
-    await user.type(telegramInput, '@johndoe');
+    await user.type(telegramInput, 'johndoe');
     
     const submitButton = screen.getByRole('button', { name: /Отправить сообщение/i });
     await user.click(submitButton);
@@ -180,11 +180,11 @@ describe('Contact Component', () => {
     
     const nameInput = screen.getByPlaceholderText(/Как вас зовут/i);
     const messageInput = screen.getByPlaceholderText(/Расскажите о вашем проекте/i);
-    const telegramInput = screen.getByPlaceholderText('@username');
+    const telegramInput = screen.getByPlaceholderText('username');
     
     await user.type(nameInput, 'John Doe');
     await user.type(messageInput, 'Test message');
-    await user.type(telegramInput, '@johndoe');
+    await user.type(telegramInput, 'johndoe');
     
     const submitButton = screen.getByRole('button', { name: /Отправить сообщение/i });
     await user.click(submitButton);
@@ -198,11 +198,11 @@ describe('Contact Component', () => {
     
     const nameInput = screen.getByPlaceholderText(/Как вас зовут/i) as HTMLInputElement;
     const messageInput = screen.getByPlaceholderText(/Расскажите о вашем проекте/i) as HTMLTextAreaElement;
-    const telegramInput = screen.getByPlaceholderText('@username') as HTMLInputElement;
+    const telegramInput = screen.getByPlaceholderText('username') as HTMLInputElement;
     
     await user.type(nameInput, 'John Doe');
     await user.type(messageInput, 'Test message');
-    await user.type(telegramInput, '@johndoe');
+    await user.type(telegramInput, 'johndoe');
     
     const submitButton = screen.getByRole('button', { name: /Отправить сообщение/i });
     await user.click(submitButton);

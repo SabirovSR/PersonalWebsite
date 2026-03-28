@@ -62,11 +62,16 @@ async def submit_contact(
 
     # Check rate limit
     if not await rate_limiter.is_allowed(client_ip):
-        remaining = await rate_limiter.get_remaining(client_ip)
+        retry_after = await rate_limiter.get_ttl(client_ip)
+        if retry_after <= 0:
+            retry_after = settings.rate_limit_window_seconds
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"Rate limit exceeded. Try again later. Remaining: {remaining}",
-            headers={"Retry-After": str(settings.rate_limit_window_seconds)},
+            detail={
+                "code": "rate_limited",
+                "retry_after_seconds": retry_after,
+            },
+            headers={"Retry-After": str(retry_after)},
         )
 
     # Validate that at least one contact method is provided for selected channels
@@ -84,6 +89,8 @@ async def submit_contact(
         message=form.message,
         channels=form.channels,
         contacts=form.contacts,
+        form_source=form.form_source,
+        tariff=form.tariff,
         ip_address=client_ip,
         user_agent=request.headers.get("user-agent"),
     )

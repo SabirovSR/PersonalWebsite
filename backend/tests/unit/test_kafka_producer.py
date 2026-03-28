@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.models import ContactChannels, ContactFormRequest, ContactMessage, Contacts
+from app.models import ContactChannel, ContactFormRequest, ContactInfo, ContactMessage
 from app.services.kafka_producer import KafkaProducerService
 
 
@@ -13,8 +13,8 @@ def sample_contact_message() -> ContactMessage:
     form_request = ContactFormRequest(
         name="John Doe",
         message="Test message",
-        channels=[ContactChannels.telegram],
-        contacts=Contacts(telegram="@johndoe"),
+        channels=[ContactChannel.TELEGRAM],
+        contacts=ContactInfo(telegram="@johndoe"),
     )
     return ContactMessage(
         name=form_request.name,

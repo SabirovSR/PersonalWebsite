@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from aiogram.types import Message, User
 
-from app.models import ContactChannels, ContactMessage, Contacts
+from app.models import ContactChannel, ContactInfo, ContactMessage, ContactTariff, FormSource
 from app.telegram.bot import _escape_html, send_notification
 
 
@@ -14,8 +14,8 @@ def sample_contact_message() -> ContactMessage:
     return ContactMessage(
         name="John Doe",
         message="Test message with <html> tags & special chars",
-        channels=[ContactChannels.telegram, ContactChannels.email],
-        contacts=Contacts(
+        channels=[ContactChannel.TELEGRAM, ContactChannel.EMAIL],
+        contacts=ContactInfo(
             telegram="@johndoe",
             email="john@example.com",
         ),
@@ -69,6 +69,7 @@ async def test_send_notification_success(sample_contact_message: ContactMessage)
             assert "John Doe" in message_text
             assert "@johndoe" in message_text
             assert "john@example.com" in message_text
+            assert "Главная страница" in message_text
 
 
 @pytest.mark.asyncio
@@ -116,8 +117,8 @@ async def test_send_notification_formats_telegram_username(sample_contact_messag
     message = ContactMessage(
         name="Jane Doe",
         message="Test",
-        channels=[ContactChannels.telegram],
-        contacts=Contacts(telegram="janedoe"),  # No @ prefix
+        channels=[ContactChannel.TELEGRAM],
+        contacts=ContactInfo(telegram="janedoe"),  # No @ prefix
     )
     
     mock_bot = MagicMock()
@@ -153,3 +154,30 @@ async def test_send_notification_html_escaping(sample_contact_message: ContactMe
             # Original message has <html>, should be escaped
             assert "&lt;html&gt;" in message_text
             assert "<html>" not in message_text
+
+
+@pytest.mark.asyncio
+async def test_send_notification_business_tariff():
+    """Business inquiries show tier and distinct header."""
+    message = ContactMessage(
+        name="Biz Client",
+        message="Need CRM bridge",
+        channels=[ContactChannel.TELEGRAM],
+        contacts=ContactInfo(telegram="@biz"),
+        form_source=FormSource.BUSINESS,
+        tariff=ContactTariff.ADVANCED,
+    )
+    mock_bot = MagicMock()
+    mock_bot.send_message = AsyncMock()
+
+    with patch("app.telegram.bot.bot", mock_bot):
+        with patch("app.telegram.bot.settings") as mock_settings:
+            mock_settings.telegram_owner_id = 123456789
+
+            result = await send_notification(message)
+
+            assert result is True
+            text = mock_bot.send_message.call_args.kwargs["text"]
+            assert "Заявка (бизнес)" in text
+            assert "Страница «Для бизнеса»" in text
+            assert "Продвинутый" in text

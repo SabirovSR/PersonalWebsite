@@ -328,13 +328,24 @@ body {
   background: color-mix(in srgb, var(--accent-primary) 80%, #000 20%);
 }
 
-.light .contact-chip {
+.light .contact-chip:not(.selected) {
   background: rgba(255, 255, 255, 0.6);
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.light .contact-chip:hover {
+.light .contact-chip:not(.selected):hover {
   background: rgba(255, 255, 255, 0.8);
+}
+
+.light .contact-chip.selected {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #ffffff;
+}
+
+.light .contact-chip.selected:hover {
+  background: color-mix(in srgb, var(--accent-primary) 88%, #000000 12%);
+  color: #ffffff;
 }
 
 /* Form input styles with glassmorphism */
@@ -371,6 +382,16 @@ textarea.form-input {
 
 .light .form-input:focus {
   background: rgba(255, 255, 255, 0.8);
+}
+
+/* Custom tariff combobox: inherits .form-input; chevron column uses border only */
+.tariff-select-trigger:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+}
+
+.light .tariff-select-trigger:focus {
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
 }
 
 /* Button styles */

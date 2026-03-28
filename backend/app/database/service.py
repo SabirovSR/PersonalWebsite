@@ -8,7 +8,7 @@ import unicodedata
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import get_settings
@@ -53,9 +53,19 @@ class DatabaseService:
             expire_on_commit=False,
         )
 
-        # Create tables if they don't exist
+        # Create tables if they don't exist, then ensure new columns on existing DBs
+        # (create_all does not ALTER existing tables)
         async with self._engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+            if self._settings.postgres_url.startswith("postgresql"):
+                await conn.execute(
+                    text(
+                        "ALTER TABLE contacts ADD COLUMN IF NOT EXISTS form_source VARCHAR(32)"
+                    )
+                )
+                await conn.execute(
+                    text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS tariff VARCHAR(32)")
+                )
 
         logger.info("Database connected")
 
@@ -82,6 +92,8 @@ class DatabaseService:
             message=message.message,
             channels=[c.value for c in message.channels],
             contacts=message.contacts.model_dump(),
+            form_source=message.form_source.value,
+            tariff=message.tariff.value if message.tariff else None,
             ip_address=message.ip_address,
             user_agent=message.user_agent,
             created_at=message.created_at,
