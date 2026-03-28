@@ -13,7 +13,7 @@ from app.config import get_settings
 from app.services.kafka_producer import kafka_producer
 from app.services.rate_limiter import rate_limiter
 from app.services.status_service import status_service
-from app.telegram.bot import setup_webhook, shutdown_webhook
+from app.telegram.bot import start_telegram_polling, stop_telegram_polling
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +31,9 @@ async def lifespan(app: FastAPI):
     await status_service.connect()
     await kafka_producer.start()
 
-    # Setup Telegram webhook if configured
-    if settings.telegram_bot_token and settings.telegram_webhook_url:
-        await setup_webhook()
+    # Telegram bot updates via long polling (single backend instance)
+    if settings.telegram_bot_token:
+        await start_telegram_polling()
 
     logger.info("Application started successfully")
 
@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Shutting down application...")
 
-    await shutdown_webhook()
+    await stop_telegram_polling()
     await kafka_producer.stop()
     await rate_limiter.disconnect()
     await status_service.disconnect()

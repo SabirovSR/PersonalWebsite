@@ -2,6 +2,7 @@
 Telegram bot for receiving contact notifications and managing owner status/blog.
 """
 
+import asyncio
 import json
 import logging
 from typing import Any
@@ -27,6 +28,8 @@ settings = get_settings()
 # Initialize bot and dispatcher
 bot = Bot(token=settings.telegram_bot_token) if settings.telegram_bot_token else None
 dp = Dispatcher()
+
+_polling_task: asyncio.Task[None] | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -704,40 +707,51 @@ def _escape_html(text: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Webhook lifecycle
+# Long polling lifecycle (one backend replica; worker uses a separate process/Bot)
 # ---------------------------------------------------------------------------
 
-async def setup_webhook() -> None:
-    """Set up Telegram webhook."""
+async def start_telegram_polling() -> None:
+    """Clear Telegram webhook if set and run dispatcher polling in the background."""
+    global _polling_task
     if bot is None:
-        logger.warning("Telegram bot not initialized, skipping webhook setup")
+        logger.warning("Telegram bot not initialized, skipping polling")
         return
-
-    webhook_url = settings.telegram_webhook_url
-    if not webhook_url:
-        logger.warning("Telegram webhook URL not configured")
+    if _polling_task is not None:
+        logger.warning("Telegram polling already started")
         return
-
-    full_url = f"{webhook_url}/api/telegram/webhook/{settings.telegram_webhook_secret}"
 
     try:
-        await bot.set_webhook(
-            url=full_url,
-            drop_pending_updates=True,
+        await bot.delete_webhook(drop_pending_updates=False)
+    except Exception:
+        logger.exception(
+            "Failed to delete Telegram webhook before polling; continuing anyway",
         )
-        logger.info(f"Telegram webhook set to {webhook_url}")
-    except Exception as e:
-        logger.exception(f"Failed to set Telegram webhook: {e}")
+
+    _polling_task = asyncio.create_task(dp.start_polling(bot))
+    logger.info("Telegram long polling started")
 
 
-async def shutdown_webhook() -> None:
-    """Remove Telegram webhook on shutdown."""
+async def stop_telegram_polling() -> None:
+    """Stop long polling and close the bot HTTP session."""
+    global _polling_task
     if bot is None:
         return
 
     try:
-        await bot.delete_webhook()
+        await dp.stop_polling()
+    except Exception:
+        logger.exception("Error stopping Telegram dispatcher polling")
+
+    if _polling_task is not None:
+        try:
+            await _polling_task
+        except asyncio.CancelledError:
+            pass
+        _polling_task = None
+
+    try:
         await bot.session.close()
-        logger.info("Telegram webhook removed")
-    except Exception as e:
-        logger.exception(f"Failed to remove Telegram webhook: {e}")
+    except Exception:
+        logger.exception("Error closing Telegram bot session")
+
+    logger.info("Telegram long polling stopped")

@@ -78,8 +78,8 @@ async def test_client(
     # Patch services before creating the app
     with patch("app.services.kafka_producer.kafka_producer", mock_kafka_producer):
         with patch("app.services.rate_limiter.rate_limiter", mock_rate_limiter):
-            with patch("app.telegram.bot.setup_webhook", AsyncMock()):
-                with patch("app.telegram.bot.shutdown_webhook", AsyncMock()):
+            with patch("app.telegram.bot.start_telegram_polling", AsyncMock()):
+                with patch("app.telegram.bot.stop_telegram_polling", AsyncMock()):
                     app = create_app()
                     
                     async with AsyncClient(app=app, base_url="http://test") as client:

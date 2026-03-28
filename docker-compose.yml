@@ -71,18 +71,16 @@ services:
       # CORS
       - CORS_ORIGINS=${CORS_ORIGINS:-https://sabirov.tech,https://web.sabirov.tech,http://localhost:3000}
       
-      # Telegram
+      # Telegram (long polling in backend; outbound HTTPS to api.telegram.org)
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_OWNER_ID=${TELEGRAM_OWNER_ID:-0}
-      - TELEGRAM_WEBHOOK_SECRET=${TELEGRAM_WEBHOOK_SECRET}
-      - TELEGRAM_WEBHOOK_URL=${TELEGRAM_WEBHOOK_URL}
       
       # Rate Limiting
       - RATE_LIMIT_REQUESTS=${RATE_LIMIT_REQUESTS:-5}
       - RATE_LIMIT_WINDOW_SECONDS=${RATE_LIMIT_WINDOW_SECONDS:-3600}
     labels:
       - "traefik.enable=true"
-      # Main API router (includes /api/public/contact, /api/telegram/webhook/{secret}, etc.)
+      # Main API router (includes /api/public/contact, health, WebSocket routes, etc.)
       - "traefik.http.routers.sabirov-api.rule=Host(`${API_DOMAIN:-api.sabirov.tech}`)"
       - "traefik.http.routers.sabirov-api.entrypoints=websecure"
       - "traefik.http.routers.sabirov-api.tls=true"
