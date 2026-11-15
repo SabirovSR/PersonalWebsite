@@ -10,6 +10,7 @@
 - Branch: main.
 - Compose Path: `./compose.dokploy.yml`.
 - Autodeploy: On; Trigger Type: On Push.
+- В GitHub Settings → Webhooks настроен отдельный push-webhook этого сервиса. Его адрес содержит токен: не публикуйте его в README или логах.
 - Domain и маршруты уже заданы Traefik labels в Compose. Не добавляйте дублирующие Domains в UI.
 
 В Environment задайте значения по `.env.dokploy.example`. POSTGRES_PASSWORD и REDIS_PASSWORD должны быть разными случайными hex-строками: например, `python -c "import secrets; print(secrets.token_hex(32))"`. Пароль PostgreSQL используется в URL, поэтому hex исключает проблемы экранирования. Переменные в UI сохраняются в приватном `.env` на сервере. Не коммитьте этот файл.
@@ -32,6 +33,8 @@ Frontend и API используют один домен. `/api/*`, включа
 4. Проверить `/ru`, `/en`, `/ru/business`, `/api/health/ready` и форму.
 
 `On Push` разворачивает сразу после push и **не ждёт успешного GitHub Actions**. Для строгого CI-gate используйте защищённый main и PR с обязательными проверками либо отдельный deployment webhook после CI.
+
+Workflow `HomeLab deployment checks` проверяет Compose, обе Docker-сборки и сохранение заявок без Telegram. Старые Frontend CI/Backend CI сохранены: у них есть отдельный технический долг (устаревшие тесты компонентов, запуск Playwright из Jest и отсутствующий backend/requirements-dev.txt). Их результаты нельзя считать зелёными только потому, что деплой успешен.
 
 Первая сборка дольше последующих: сервер скачивает базовые образы и зависимости. NEXT_PUBLIC_* и SITE_URL учитываются при сборке; после их изменения нужен новый Deploy со сборкой.
 
