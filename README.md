@@ -1,5 +1,11 @@
 # sabirov.tech
 
+## HomeLab / Dokploy
+
+Новый деплой: **https://website.lab.sabirov.tech**. Используется `compose.dokploy.yml`, источник GitHub, автоматическое развёртывание после push в `main`.
+
+Инструкция: [docs/DOKPLOY.md](docs/DOKPLOY.md). Переменные: [.env.dokploy.example](.env.dokploy.example). Ниже сохранено описание прежней инфраструктуры; для HomeLab внешние Kafka/Redis Sentinel и сети edge/messaging не нужны.
+
 > Личный сайт-портфолио с системой обратной связи и Telegram-уведомлениями
 
 [![Website](https://img.shields.io/badge/Website-sabirov.tech-00ff88?style=for-the-badge)](https://sabirov.tech)

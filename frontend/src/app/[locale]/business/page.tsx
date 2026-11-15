@@ -8,8 +8,9 @@ import { BusinessServices } from '@/components/business/BusinessServices';
 import { BusinessPricing } from '@/components/business/BusinessPricing';
 import { fetchStatus } from '@/lib/api.server';
 
-export async function generateMetadata({ params }: { params: { locale: string } }) {
-  const t = await getTranslations({ locale: params.locale, namespace: 'business.meta' });
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'business.meta' });
   return {
     title: t('title'),
     description: t('description'),

@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { locales } from '@/i18n';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://sabirov.tech';
+  const baseUrl = (process.env.SITE_URL ?? 'https://sabirov.tech');
 
   // Generate sitemap entries for each locale
   const routes = locales.flatMap((locale) => [

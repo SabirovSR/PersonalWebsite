@@ -108,14 +108,20 @@ class KafkaConsumerService:
             logger.info(f"Processing contact message: {message.id}")
 
             # 1. Save to database (non-fatal: Telegram must still work if e.g. columns are missing)
+            saved = False
             try:
                 await self._db.save_contact(message)
+                saved = True
                 logger.info(f"Saved contact to database: {message.id}")
             except Exception as db_err:
                 logger.exception(
                     "Failed to save contact to DB; continuing with Telegram: %s",
                     db_err,
                 )
+
+            # Telegram is optional in a fresh deployment; never acknowledge lost data.
+            if not self._settings.telegram_bot_token:
+                return saved
 
             # 2. Send Telegram notification with retry
             success = await self._send_with_retry(message)

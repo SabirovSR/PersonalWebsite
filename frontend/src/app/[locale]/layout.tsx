@@ -21,8 +21,8 @@ const jsonLd = {
   '@type': 'Person',
   name: 'Сабиров Савелий Русланович',
   alternateName: 'Sabirov Saveliy',
-  url: 'https://sabirov.tech',
-  image: 'https://sabirov.tech/avatar.jpg',
+  url: process.env.SITE_URL ?? 'https://sabirov.tech',
+  image: (process.env.SITE_URL ?? 'https://sabirov.tech') + '/avatar.jpg',
   jobTitle: 'Software Developer',
   worksFor: {
     '@type': 'Organization',
@@ -54,11 +54,12 @@ const jsonLd = {
 
 export default async function LocaleLayout({
   children,
-  params: { locale },
+  params,
 }: {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
   // Validate locale
   if (!locales.includes(locale as Locale)) {
     notFound();

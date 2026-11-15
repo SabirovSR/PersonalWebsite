@@ -51,7 +51,7 @@ EXPOSE 8000
 
 # Проверка здоровья контейнера
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import httpx; httpx.get('http://localhost:8000/api/health')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/live')" || exit 1
 
 # Команда по умолчанию - запуск API сервера
 # Для worker'а команда переопределяется в docker-compose

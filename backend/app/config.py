@@ -47,7 +47,7 @@ class Settings(BaseSettings):
         "redis-sentinel-1:26379,redis-sentinel-2:26379,redis-sentinel-3:26379"
     )
     redis_sentinel_master: str = "mymaster"
-    redis_password: str = "$aveL1j+-"
+    redis_password: str = ""
     redis_sentinel_password: str = ""  # Sentinel nodes auth; empty = use redis_password
     redis_db: int = 0
     redis_socket_timeout: float = 5.0

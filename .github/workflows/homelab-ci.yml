@@ -1,0 +1,25 @@
+name: HomeLab deployment checks
+on:
+  push:
+    branches: [main, feat/dokploy-homelab]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  containers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      POSTGRES_PASSWORD: ci-validation-only
+      REDIS_PASSWORD: ci-validation-only
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate deployment manifest without loading local secrets
+        run: docker compose --env-file .env.dokploy.example -f compose.dokploy.yml config --quiet
+      - name: Build backend
+        run: docker build -t website-backend:ci backend
+      - name: Verify durable processing without Telegram
+        run: docker run --rm -v "$PWD/backend:/app:ro" website-backend:ci python -m unittest tests.test_optional_telegram -v
+      - name: Build frontend
+        run: docker build --build-arg SITE_URL=https://website.lab.sabirov.tech --build-arg NEXT_PUBLIC_API_KEY=website-contact-v1 -t website-frontend:ci frontend

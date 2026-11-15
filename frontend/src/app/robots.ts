@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/api/', '/_next/', '/static/'],
       },
     ],
-    sitemap: 'https://sabirov.tech/sitemap.xml',
-    host: 'https://sabirov.tech',
+    sitemap: (process.env.SITE_URL ?? 'https://sabirov.tech') + '/sitemap.xml',
+    host: (process.env.SITE_URL ?? 'https://sabirov.tech'),
   };
 }

@@ -13,7 +13,7 @@ const onest = Onest({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://sabirov.tech'),
+  metadataBase: new URL((process.env.SITE_URL ?? 'https://sabirov.tech')),
   title: {
     default: 'Сабиров Савелий — Software Developer & DevOps Enthusiast',
     template: '%s | Sabirov Saveliy',
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     'Сабиров Савелий',
     'Sabirov Saveliy',
   ],
-  authors: [{ name: 'Сабиров Савелий Русланович', url: 'https://sabirov.tech' }],
+  authors: [{ name: 'Сабиров Савелий Русланович', url: (process.env.SITE_URL ?? 'https://sabirov.tech') }],
   creator: 'Сабиров Савелий Русланович',
   publisher: 'Сабиров Савелий Русланович',
   icons: {
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'ru_RU',
     alternateLocale: ['en_US'],
-    url: 'https://sabirov.tech',
+    url: (process.env.SITE_URL ?? 'https://sabirov.tech'),
     title: 'Сабиров Савелий — Software Developer & DevOps',
     description: 'Backend разработчик и DevOps инженер. Специализируюсь на C#, Python, Docker и Kubernetes.',
     siteName: 'Sabirov Saveliy Portfolio',
@@ -75,10 +75,10 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: 'https://sabirov.tech',
+    canonical: (process.env.SITE_URL ?? 'https://sabirov.tech'),
     languages: {
-      'ru-RU': 'https://sabirov.tech/ru',
-      'en-US': 'https://sabirov.tech/en',
+      'ru-RU': (process.env.SITE_URL ?? 'https://sabirov.tech') + '/ru',
+      'en-US': (process.env.SITE_URL ?? 'https://sabirov.tech') + '/en',
     },
   },
 };

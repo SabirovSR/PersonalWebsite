@@ -1,0 +1,140 @@
+# Self-contained HomeLab deployment. TLS terminates at the VDS Caddy.
+x-backend: &backend
+  build: ./backend
+  restart: unless-stopped
+  environment: &backend-env
+    ENVIRONMENT: production
+    DEBUG: 'false'
+    PUBLIC_API_KEY: ${PUBLIC_API_KEY:-website-contact-v1}
+    POSTGRES_URL: postgresql+asyncpg://website:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/website
+    REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD}
+    REDIS_SENTINEL_HOSTS: ''
+    KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    KAFKA_TOPIC: website-contacts
+    KAFKA_DLQ_TOPIC: website-contacts-dlq
+    KAFKA_CONSUMER_GROUP: website-worker
+    CORS_ORIGINS: https://${SITE_DOMAIN:-website.lab.sabirov.tech}
+    TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+    TELEGRAM_OWNER_ID: ${TELEGRAM_OWNER_ID:-0}
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis-master:
+      condition: service_healthy
+    kafka:
+      condition: service_healthy
+  networks: [default]
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: website
+      POSTGRES_DB: website
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U website -d website']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis-master:
+    image: redis:7-alpine
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD}
+    command: [sh, -c, 'exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"']
+    volumes: [redis_data:/data]
+    healthcheck:
+      test: [CMD-SHELL, 'REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli ping | grep -q PONG']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kafka:
+    image: apache/kafka:3.9.1
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_HEAP_OPTS: -Xms256m -Xmx512m
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    volumes: [kafka_data:/var/lib/kafka/data]
+    healthcheck:
+      test: [CMD-SHELL, '/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1']
+      interval: 15s
+      timeout: 10s
+      retries: 15
+      start_period: 30s
+
+  backend:
+    <<: *backend
+    networks: [default, dokploy-network]
+    labels:
+      traefik.enable: 'true'
+      traefik.docker.network: dokploy-network
+      traefik.http.routers.personalwebsite-api.rule: Host(`${SITE_DOMAIN:-website.lab.sabirov.tech}`) && PathPrefix(`/api/`)
+      traefik.http.routers.personalwebsite-api.entrypoints: web
+      traefik.http.routers.personalwebsite-api.priority: '100'
+      traefik.http.routers.personalwebsite-api.service: personalwebsite-api
+      traefik.http.services.personalwebsite-api.loadbalancer.server.port: '8000'
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/ready')"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+
+  worker:
+    <<: *backend
+    command: [python, -m, app.worker]
+    healthcheck:
+      disable: true
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_KEY: ${PUBLIC_API_KEY:-website-contact-v1}
+        SITE_URL: https://${SITE_DOMAIN:-website.lab.sabirov.tech}
+    restart: unless-stopped
+    environment:
+      BACKEND_URL: http://backend:8000
+      SITE_URL: https://${SITE_DOMAIN:-website.lab.sabirov.tech}
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [default, dokploy-network]
+    labels:
+      traefik.enable: 'true'
+      traefik.docker.network: dokploy-network
+      traefik.http.routers.personalwebsite.rule: Host(`${SITE_DOMAIN:-website.lab.sabirov.tech}`)
+      traefik.http.routers.personalwebsite.entrypoints: web
+      traefik.http.routers.personalwebsite.service: personalwebsite
+      traefik.http.services.personalwebsite.loadbalancer.server.port: '3000'
+    healthcheck:
+      test: [CMD, wget, --quiet, --tries=1, --spider, 'http://127.0.0.1:3000/api/health']
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+networks:
+  dokploy-network:
+    external: true
+volumes:
+  postgres_data:
+  redis_data:
+  kafka_data:
