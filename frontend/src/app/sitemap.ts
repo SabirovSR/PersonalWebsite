@@ -1,54 +1,13 @@
-import { MetadataRoute } from 'next';
+import type { MetadataRoute } from 'next';
 import { locales } from '@/i18n';
+import { languages } from '@/lib/seo';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = (process.env.SITE_URL ?? 'https://sabirov.tech');
-
-  // Generate sitemap entries for each locale
-  const routes = locales.flatMap((locale) => [
-    {
-      url: `${baseUrl}/${locale}`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/${locale}/business`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/${locale}#about`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/${locale}#skills`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/${locale}#experience`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/${locale}#projects`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/${locale}#contact`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly' as const,
-      priority: 0.7,
-    },
-  ]);
-
-  return routes;
+  return ['', '/business'].flatMap((path) => {
+    const translations = languages(path);
+    return locales.map((locale) => ({
+      url: translations[locale],
+      alternates: { languages: translations },
+    }));
+  });
 }

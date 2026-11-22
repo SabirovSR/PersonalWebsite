@@ -1,3 +1,5 @@
+import { getLocale } from 'next-intl/server';
+import { siteOrigin } from '@/lib/seo';
 import type { Metadata } from 'next';
 import { JetBrains_Mono, Onest } from 'next/font/google';
 import './globals.css';
@@ -13,7 +15,7 @@ const onest = Onest({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL((process.env.SITE_URL ?? 'https://sabirov.tech')),
+  metadataBase: new URL(siteOrigin),
   title: {
     default: 'Сабиров Савелий — Software Developer & DevOps Enthusiast',
     template: '%s | Sabirov Saveliy',
@@ -34,34 +36,11 @@ export const metadata: Metadata = {
     'Сабиров Савелий',
     'Sabirov Saveliy',
   ],
-  authors: [{ name: 'Сабиров Савелий Русланович', url: (process.env.SITE_URL ?? 'https://sabirov.tech') }],
+  authors: [{ name: 'Сабиров Савелий Русланович', url: siteOrigin }],
   creator: 'Сабиров Савелий Русланович',
   publisher: 'Сабиров Савелий Русланович',
   icons: {
     icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⚡%3C/text%3E%3C/svg%3E",
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'ru_RU',
-    alternateLocale: ['en_US'],
-    url: (process.env.SITE_URL ?? 'https://sabirov.tech'),
-    title: 'Сабиров Савелий — Software Developer & DevOps',
-    description: 'Backend разработчик и DevOps инженер. Специализируюсь на C#, Python, Docker и Kubernetes.',
-    siteName: 'Sabirov Saveliy Portfolio',
-    images: [
-      {
-        url: '/avatar.jpg',
-        width: 350,
-        height: 350,
-        alt: 'Сабиров Савелий',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary',
-    title: 'Сабиров Савелий — Software Developer',
-    description: 'Backend Developer & DevOps Enthusiast',
-    images: ['/avatar.jpg'],
   },
   robots: {
     index: true,
@@ -74,13 +53,7 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  alternates: {
-    canonical: (process.env.SITE_URL ?? 'https://sabirov.tech'),
-    languages: {
-      'ru-RU': (process.env.SITE_URL ?? 'https://sabirov.tech') + '/ru',
-      'en-US': (process.env.SITE_URL ?? 'https://sabirov.tech') + '/en',
-    },
-  },
+
 };
 
 export const viewport = {
@@ -94,13 +67,13 @@ export const viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html suppressHydrationWarning>
+    <html lang={await getLocale()} suppressHydrationWarning>
       <head>
         <link rel="preload" href="/avatar.jpg" as="image" />
         {/* Set neutral loading state synchronously before hydration to prevent accent-color flash */}

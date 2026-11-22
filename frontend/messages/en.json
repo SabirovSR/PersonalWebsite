@@ -1,4 +1,8 @@
 {
+  "meta": {
+    "title": "Saveliy Sabirov — C# and Python Developer",
+    "description": "Explore Saveliy Sabirov’s backend development and DevOps portfolio, including C# and Python services, Docker deployments, Kubernetes and PostgreSQL."
+  },
   "nav": {
     "about": "About",
     "skills": "Skills",

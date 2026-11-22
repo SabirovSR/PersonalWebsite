@@ -7,6 +7,7 @@ import { ParallaxBackground } from '@/components/ParallaxBackground';
 import { FloatingParticles } from '@/components/FloatingParticles';
 import { Terminal } from '@/components/Terminal';
 import { LangSetter } from '@/components/LangSetter';
+import { siteOrigin } from '@/lib/seo';
 
 // Force dynamic rendering for i18n routes
 export const dynamic = 'force-dynamic';
@@ -21,8 +22,8 @@ const jsonLd = {
   '@type': 'Person',
   name: 'Сабиров Савелий Русланович',
   alternateName: 'Sabirov Saveliy',
-  url: process.env.SITE_URL ?? 'https://sabirov.tech',
-  image: (process.env.SITE_URL ?? 'https://sabirov.tech') + '/avatar.jpg',
+  url: siteOrigin,
+  image: siteOrigin + '/avatar.jpg',
   jobTitle: 'Software Developer',
   worksFor: {
     '@type': 'Organization',

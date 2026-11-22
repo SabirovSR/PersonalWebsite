@@ -1,3 +1,4 @@
+import { siteOrigin } from '@/lib/seo';
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
@@ -6,10 +7,10 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/_next/', '/static/'],
+        disallow: ['/api/'],
       },
     ],
-    sitemap: (process.env.SITE_URL ?? 'https://sabirov.tech') + '/sitemap.xml',
-    host: (process.env.SITE_URL ?? 'https://sabirov.tech'),
+    sitemap: siteOrigin + '/sitemap.xml',
+    host: siteOrigin,
   };
 }

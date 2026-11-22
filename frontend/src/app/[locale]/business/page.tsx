@@ -1,4 +1,5 @@
-import { getTranslations } from 'next-intl/server';
+import { pageMetadata } from '@/lib/seo';
+import type { Locale } from '@/i18n';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { Contact } from '@/components/Contact';
@@ -8,13 +9,9 @@ import { BusinessServices } from '@/components/business/BusinessServices';
 import { BusinessPricing } from '@/components/business/BusinessPricing';
 import { fetchStatus } from '@/lib/api.server';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'business.meta' });
-  return {
-    title: t('title'),
-    description: t('description'),
-  };
+  return pageMetadata(locale, '/business');
 }
 
 export default async function BusinessPage() {

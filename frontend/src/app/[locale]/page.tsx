@@ -1,3 +1,5 @@
+import { pageMetadata } from '@/lib/seo';
+import type { Locale } from '@/i18n';
 import dynamic from 'next/dynamic';
 import { Navigation } from '@/components/Navigation';
 import { Hero } from '@/components/Hero';
@@ -11,6 +13,11 @@ const Skills = dynamic(() => import('@/components/Skills').then(mod => ({ defaul
 const Experience = dynamic(() => import('@/components/Experience').then(mod => ({ default: mod.Experience })));
 const Projects = dynamic(() => import('@/components/Projects').then(mod => ({ default: mod.Projects })));
 const Footer = dynamic(() => import('@/components/Footer').then(mod => ({ default: mod.Footer })));
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: Locale }> }) {
+  const { locale } = await params;
+  return pageMetadata(locale, '');
+}
 
 export default async function Home() {
   const [initialStatus, initialPosts] = await Promise.all([

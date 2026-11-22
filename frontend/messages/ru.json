@@ -1,4 +1,8 @@
 {
+  "meta": {
+    "title": "Савелий Сабиров — разработчик C# и Python",
+    "description": "Проекты и опыт Савелия Сабирова в backend-разработке и DevOps. Разработка сервисов на C# и Python, работа с Docker, Kubernetes и PostgreSQL."
+  },
   "nav": {
     "about": "Обо мне",
     "skills": "Навыки",

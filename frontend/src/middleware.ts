@@ -10,6 +10,7 @@ export default createMiddleware({
 
   // Always use prefix for locale (e.g., /ru, /en)
   localePrefix: 'always',
+  alternateLinks: false, // Localized pages publish their own hreflang metadata.
 
   // Disable detection from Accept-Language and cookies,
   // so sabirov.tech always redirects to /ru
