@@ -16,7 +16,7 @@ alembic==1.13.1
 redis==5.0.1
 
 # Telegram
-aiogram>=3.16.0
+aiogram==3.31.0
 
 # Validation and settings
 pydantic==2.6.1

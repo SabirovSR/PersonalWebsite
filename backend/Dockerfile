@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Создаём wheel-пакеты из requirements.txt
 # Это ускоряет установку на следующем этапе
 COPY requirements.txt .
-RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
+RUN pip wheel --no-cache-dir --wheel-dir /app/wheels -r requirements.txt
 
 # ---------------------
 # Этап выполнения (runtime)
@@ -38,7 +38,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Копируем и устанавливаем wheel-пакеты из этапа сборки
 COPY --from=builder /app/wheels /wheels
-RUN pip install --no-cache /wheels/*
+COPY requirements.txt .
+RUN pip install --no-cache-dir --no-index --find-links=/wheels -r requirements.txt && pip check
 
 # Копируем код приложения с правильными правами
 COPY --chown=appuser:appuser app/ ./app/
